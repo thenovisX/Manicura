@@ -367,7 +367,8 @@ details.borrar .form { margin-top: 14px; }
 
 /* ---------- Ventana de reserva y aviso de cookies del SDK, a juego ---------- */
 .bk { box-shadow: 0 60px 160px rgba(0, 0, 0, .7), 0 0 0 1px rgba(242, 167, 184, .08); }
-.bk-h { font-style: italic; font-weight: 300 !important; font-size: 1.9rem !important; letter-spacing: -.03em; }
+.bk-h { font-style: italic; font-weight: 300 !important; font-size: 1.7rem !important; letter-spacing: -.03em; }
+.bk-nav .bk-btn { min-height: 52px; font-size: 1rem; }
 .bk-step { color: var(--rosa) !important; letter-spacing: .16em !important; text-transform: uppercase; font-size: .72rem !important; }
 .bk-day b { font-family: var(--serif); font-weight: 400 !important; }
 .bk-btn-main, .ck-btn-main { transition: background .3s; }

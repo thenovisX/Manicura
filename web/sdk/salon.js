@@ -337,7 +337,7 @@
       if (to > B.pane) {
         var msg = checkPane(B.pane), box = $('#bk-err' + B.pane);
         if (box) box.textContent = msg;
-        if (msg) return;
+        if (msg) { if (box) box.scrollIntoView({ block: 'nearest' }); return; }
       }
       showPane(to);
     });
@@ -380,8 +380,8 @@
       err.textContent = '';
       if (!data.time) { showPane(2); return; }
       var falta = checkPane(3);
-      if (falta) { showPane(3); $('#bk-err3').textContent = falta; return; }
-      if (!data.privacy) { err.textContent = T('Marca la casilla para aceptar las políticas.'); return; }
+      if (falta) { showPane(3); $('#bk-err3').textContent = falta; $('#bk-err3').scrollIntoView({ block: 'nearest' }); return; }
+      if (!data.privacy) { err.textContent = T('Marca la casilla para aceptar las políticas.'); err.scrollIntoView({ block: 'nearest' }); return; }
       var btn = this;
       btn.disabled = true;
       btn.textContent = T('Enviando…');
