@@ -62,6 +62,9 @@
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     phone: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+    web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
     plate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M10 3h4v4h-4zM8.5 7h7l.8 3.5V20a1 1 0 0 1-1 1H8.7a1 1 0 0 1-1-1v-9.5z"/></svg>',
   };
 
@@ -382,25 +385,34 @@
   }
 
   /* ---------- Estructura principal ---------- */
+  // Menú de abajo (móvil): Inicio, Agenda, botón grande «Nueva cita», Peticiones y Servicios. Ajustes va arriba a la derecha.
   const TABS = [
-    ['pet', 'Peticiones', ICON.pet],
-    ['hoy', 'Hoy', ICON.hoy],
-    ['cal', 'Calendario', ICON.cal],
+    ['hoy', 'Inicio', ICON.home],
+    ['cal', 'Agenda', ICON.cal],
+    ['pet', 'Peticiones', ICON.bell],
     ['servicios', 'Servicios', ICON.servicios],
     ['ajustes', 'Ajustes', ICON.ajustes],
   ];
+  const TITLES = { pet: 'Peticiones', hoy: 'Inicio', cal: 'Agenda', servicios: 'Servicios', ajustes: 'Ajustes' };
 
   function startApp() {
+    const tab = ([k, label, icon]) => `<button type="button" class="tab-${k}" data-tab="${k}">${icon}<span>${label}</span>${k === 'pet' ? '<b class="badge" id="badge" hidden></b>' : ''}</button>`;
+    const newBtn = can('reservas') ? `<button type="button" class="tab-new" data-new-cita aria-label="Nueva cita">${ICON.plus}<span>Nueva cita</span></button>` : '';
     $('#app').innerHTML = `
       <header class="bar">
-        <div><p class="bar-sub" id="bar-sub">${esc(S.salon)}</p><h1 id="title"></h1></div>
+        <div class="bar-txt"><p class="bar-sub" id="bar-sub">${esc(S.salon)}</p><h1 id="title"></h1></div>
         <button class="icon-btn" id="refresh" type="button" aria-label="Actualizar">${ICON.refresh}</button>
+        <button class="icon-btn me-btn" type="button" data-tab="ajustes" aria-label="Ajustes">${ICON.ajustes}</button>
       </header>
       <main id="view"></main>
       <div id="fab-slot"></div>
-      <nav class="tabs" aria-label="Secciones">
-        ${TABS.map(([k, label, icon]) => `<button type="button" data-tab="${k}">${icon}<span>${label}</span>${k === 'pet' ? '<b class="badge" id="badge" hidden></b>' : ''}</button>`).join('')}
+      <nav class="tabs${newBtn ? '' : ' no-new'}" aria-label="Secciones">
+        <p class="tabs-brand">${esc(S.salon)}</p>
+        ${tab(TABS[0])}${tab(TABS[1])}${newBtn}${tab(TABS[2])}${tab(TABS[3])}${tab(TABS[4])}
       </nav>`;
+    $('.me-btn').addEventListener('click', () => go('ajustes'));
+    const nb = $('[data-new-cita]');
+    if (nb) nb.addEventListener('click', () => editReservation(null, newCitaDay()));
     $('.tabs').addEventListener('click', (e) => {
       const b = e.target.closest('[data-tab]');
       if (b) go(b.dataset.tab);
@@ -472,6 +484,11 @@
     });
   }
 
+  /** Día que sale ya puesto al pulsar «Nueva cita»: el que estás mirando en Inicio o en la Agenda. */
+  function newCitaDay() {
+    const d = S.tab === 'cal' ? S.calDay : S.tab === 'hoy' ? S.hoyDay : todayISO();
+    return d < todayISO() ? todayISO() : d;
+  }
   function setTitle(t) { $('#title').textContent = t; }
   function setFab(label, onClick) {
     const slot = $('#fab-slot');
@@ -484,8 +501,8 @@
     const seq = ++renderSeq;
     const view = $('#view');
     if (!view) return;
-    const titles = { pet: 'Peticiones', hoy: 'Hoy', cal: 'Calendario', servicios: 'Servicios', ajustes: 'Ajustes' };
-    setTitle(S.tab === 'hoy' && S.hoyDay !== todayISO() ? 'Reservas' : titles[S.tab]);
+    setTitle(TITLES[S.tab]);
+    document.body.dataset.tab = S.tab;
     setFab('', null);
     if (!view.dataset.tab || view.dataset.tab !== S.tab) view.innerHTML = '<div class="spin dark" aria-label="Cargando"></div>';
     view.dataset.tab = S.tab;
@@ -513,16 +530,30 @@
     } else if (r.status === 'esperando') {
       actions.push(waButton(r, 'Reenviar'));
     }
-    if (ACTIVE.includes(r.status) && r.phone && r.status !== 'pendiente') actions.push(`<a class="btn btn-sm btn-quiet b-call" href="${esc(telHref(r.phone))}" aria-label="Llamar a ${esc(r.name)}">${ICON.phone}${r.status === 'pendiente' ? '' : '<span>Llamar</span>'}</a>`);
+    if (ACTIVE.includes(r.status) && r.phone && r.status !== 'pendiente') {
+      actions.push(`<a class="btn btn-sm btn-quiet b-call" href="${esc(telHref(r.phone))}" aria-label="Llamar a ${esc(r.name)}">${ICON.phone}<span>Llamar</span></a>`);
+      if (r.status === 'confirmada') actions.push(`<a class="btn btn-sm btn-quiet b-chat" href="${esc(waHref(r.phone))}" target="_blank" rel="noopener" aria-label="Escribir a ${esc(r.name)} por WhatsApp">${ICON.wa}<span>WhatsApp</span></a>`);
+    }
+    const when = ACTIVE.includes(r.status) ? `${esc(r.time)} – ${endTime(r)}` : esc(r.time);
     return `<article class="res st-${r.status}" data-open="${r.id}">
-      <div class="res-time">${showDate ? `<small>${esc(fmtShort(r.date))}</small>` : ''}<b>${esc(r.time)}</b>${ACTIVE.includes(r.status) ? `<small class="res-end" title="Acaba a las ${endTime(r)}">hasta ${endTime(r)}</small>` : ''}</div>
-      <div class="res-main">
-        <p class="res-name">${esc(r.name)}</p>
-        <p class="res-meta"><span>${esc(resWhat(r))}</span><span class="chip chip-${r.status}">${STATUS[r.status]}</span>${r.source === 'panel' ? '<span class="by-hand">a mano</span>' : ''}${r.customer ? '<span class="by-hand">con cuenta</span>' : ''}</p>
-        ${r.notes ? `<p class="res-notes">${esc(r.notes)}</p>` : ''}
-        ${actions.length ? `<div class="res-actions">${actions.join('')}</div>` : ''}
-      </div></article>`;
+      <div class="res-top">
+        <span class="avatar" style="--h:${hue(r.name)}" aria-hidden="true">${esc(initials(r.name))}</span>
+        <div class="res-main">
+          <p class="res-name">${esc(r.name)}</p>
+          <p class="res-what">${esc(resWhat(r))}</p>
+        </div>
+        <div class="res-time">${showDate ? `<small>${esc(fmtShort(r.date))}</small>` : ''}<b>${when}</b></div>
+      </div>
+      <p class="res-meta"><span class="chip chip-${r.status}">${STATUS[r.status]}</span>${r.customer ? '<span class="by-hand">con cuenta</span>' : ''}</p>
+      ${r.notes ? `<p class="res-notes">${esc(r.notes)}</p>` : ''}
+      ${actions.length ? `<div class="res-actions">${actions.join('')}</div>` : ''}
+    </article>`;
   }
+
+  /** «María Pérez» → «MP», para el círculo de la tarjeta. */
+  const initials = (n) => String(n).trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0)).join('').toUpperCase() || '?';
+  /** Un color fijo para cada nombre (siempre el mismo para la misma persona). */
+  const hue = (n) => [...String(n)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
 
   /** Botón que abre WhatsApp con el mensaje y el enlace ya escritos para el cliente (o lo manda solo con la API de Meta). */
   function waButton(r, label, big) {
@@ -538,10 +569,9 @@
 
   function daySummary(list) {
     const act = list.filter((r) => ACTIVE.includes(r.status));
-    const people = act.reduce((a, r) => a + r.people, 0);
     const pend = act.filter((r) => r.status !== 'confirmada').length;
-    if (!act.length) return 'Sin reservas';
-    return `<b>${act.length}</b> ${act.length === 1 ? 'reserva' : 'reservas'} · <b>${people}</b> personas${pend ? ` · <b>${pend}</b> sin confirmar` : ''}`;
+    if (!act.length) return 'Sin citas';
+    return `<b>${act.length}</b> ${act.length === 1 ? 'cita' : 'citas'}${pend ? ` · <b>${pend}</b> sin confirmar` : ''}`;
   }
 
   function turnosHTML(list) {
@@ -559,11 +589,34 @@
     const t = todayISO();
     [S.hoyAll] = await Promise.all([api(`reservations&from=${t}&to=${iso(addDays(new Date(), 180))}`), loadSettings()]);
     const newReq = S.hoyAll.filter((r) => r.status === 'pendiente').length;
-    if (can('reservas')) setFab('Nueva reserva', () => editReservation(null, S.hoyDay));
-    let html = `<label class="search">${ICON.search}<input type="search" id="hoy-q" placeholder="Buscar reserva por nombre o teléfono" value="${esc(S.query)}" autocomplete="off" enterkeyhint="search"></label>`;
+    // Saludo con el resumen del día, como la portada de una app
+    const now = new Date();
+    const h = now.getHours();
+    const hello = h < 6 ? 'Buenas noches' : h < 14 ? 'Buenos días' : h < 21 ? 'Buenas tardes' : 'Buenas noches';
+    const nowMin = h * 60 + now.getMinutes();
+    const today = S.hoyAll.filter((r) => r.date === t && ACTIVE.includes(r.status));
+    const next = today.filter((r) => toMin(r.time) >= nowMin).sort((x, y) => x.time.localeCompare(y.time))[0];
+    const left = today.filter((r) => toMin(r.time) + resMin(r) > nowMin).length;
+    let html = `<section class="hero">
+      <p class="hero-date">${esc(fmtDay(t))}</p>
+      <h2 class="hero-hi">${hello}</h2>
+      <p class="hero-sum">${!today.length ? 'Hoy no tienes citas apuntadas.' : left ? `Te ${left === 1 ? 'queda' : 'quedan'} <b>${left} ${left === 1 ? 'cita' : 'citas'}</b> hoy.` : 'Ya has terminado las citas de hoy.'}</p>
+      ${next ? `<button type="button" class="hero-next" data-open="${next.id}"><span>Siguiente</span><b>${esc(next.time)}</b> ${esc(next.name.split(' ')[0])} · ${esc(next.service || resWhat(next))}</button>` : ''}
+    </section>`;
     if (newReq) {
-      html += `<button type="button" class="alert alert-btn" data-goto-tab="pet">${newReq} ${newReq === 1 ? 'petición nueva' : 'peticiones nuevas'} de reserva. Toca para verlas ›</button>`;
+      html += `<button type="button" class="pet-call" data-goto-tab="pet">
+        <span class="pet-ico">${ICON.bell}<b>${newReq}</b></span>
+        <span class="pet-txt"><b>${newReq === 1 ? 'Una clienta quiere cita' : `${newReq} clientas quieren cita`}</b><small>Toca para aceptar o rechazar</small></span>
+        <span class="pet-go" aria-hidden="true">›</span></button>`;
     }
+    const quick = [
+      can('reservas') && `<button type="button" class="qa qa-main" data-new-cita>${ICON.plus}<span>Nueva cita</span></button>`,
+      `<button type="button" class="qa" data-goto-tab="cal">${ICON.cal}<span>Ver agenda</span></button>`,
+      can('servicios') && `<button type="button" class="qa" data-new-service>${ICON.servicios}<span>Añadir servicio</span></button>`,
+      S.base && `<a class="qa" href="${esc(S.base)}/" target="_blank" rel="noopener">${ICON.web}<span>Ver mi web</span></a>`,
+    ].filter(Boolean);
+    html += `<nav class="quick" aria-label="Accesos rápidos">${quick.join('')}</nav>`;
+    html += `<label class="search">${ICON.search}<input type="search" id="hoy-q" placeholder="Buscar una cita por nombre o teléfono" value="${esc(S.query)}" autocomplete="off" enterkeyhint="search"></label>`;
     html += '<div id="hoy-body"></div>';
     return html;
   }
@@ -575,12 +628,11 @@
     for (let i = 0; i < 14; i++) {
       const d = iso(addDays(new Date(), i));
       const act = S.hoyAll.filter((r) => r.date === d && ACTIVE.includes(r.status));
-      const ppl = act.reduce((a, r) => a + r.people, 0);
       const pend = act.some((r) => r.status !== 'confirmada');
       const dd = parseISO(d);
       const name = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DIAS_C[dd.getDay()];
-      out += `<button type="button" role="tab" class="strip-d${d === S.hoyDay ? ' sel' : ''}" data-hoy-day="${d}" aria-selected="${d === S.hoyDay}" aria-label="${esc(fmtDay(d))}: ${ppl} personas">
-        <span class="sd-n">${name}</span><b>${dd.getDate()}</b><span class="sd-p">${ppl ? ppl + 'p' : '·'}</span>${pend ? '<i class="pd"></i>' : ''}</button>`;
+      out += `<button type="button" role="tab" class="strip-d${d === S.hoyDay ? ' sel' : ''}" data-hoy-day="${d}" aria-selected="${d === S.hoyDay}" aria-label="${esc(fmtDay(d))}: ${act.length} citas">
+        <span class="sd-n">${name}</span><b>${dd.getDate()}</b><span class="sd-p">${act.length ? `${act.length} ${act.length === 1 ? 'cita' : 'citas'}` : 'libre'}</span>${pend ? '<i class="pd"></i>' : ''}</button>`;
     }
     return out + '</div>';
   }
@@ -612,7 +664,7 @@
     }
     html += `<div class="day-head"><p class="day-date">${esc(fmtDay(S.hoyDay))}</p><p class="day-sum">${daySummary(list)}</p></div>`;
     html += list.length ? turnosHTML(list)
-      : `<div class="empty"><p>${S.hoyDay === t ? 'Hoy no hay reservas todavía.' : 'Este día no hay reservas.'}</p>${can('reservas') ? `<button class="btn btn-line btn-sm" data-new="${S.hoyDay}">Apuntar una reserva</button>` : ''}</div>`;
+      : `<div class="empty"><p>${S.hoyDay === t ? 'Hoy no hay citas todavía.' : 'Este día no hay citas.'}</p>${can('reservas') ? `<button class="btn btn-line btn-sm" data-new="${S.hoyDay}">Apuntar una cita</button>` : ''}</div>`;
     box.innerHTML = html;
     const sel = $('.strip-d.sel', box);
     if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
@@ -621,8 +673,7 @@
   /* ---------- PETICIONES ---------- */
   async function viewPet() {
     const [d] = await Promise.all([api('requests'), loadSettings()]);
-    if (can('reservas')) setFab('Nueva reserva', () => editReservation(null, todayISO()));
-    let html = !can('reservas') ? '<p class="pet-intro">Puedes ver las peticiones, pero tu usuario no puede aceptarlas ni rechazarlas.</p>' : `<p class="pet-intro">Al pulsar <b>Confirmar por WhatsApp</b> se abre WhatsApp con un mensaje para el cliente y un enlace. Dale a enviar: cuando el cliente toque el enlace, la reserva quedará confirmada.</p>`;
+    let html = !can('reservas') ? '<p class="pet-intro">Puedes ver las peticiones, pero tu usuario no puede aceptarlas ni rechazarlas.</p>' : `<ol class="how"><li>Pulsa <b>Confirmar por WhatsApp</b>.</li><li>Se abre WhatsApp con el mensaje escrito: dale a <b>enviar</b>.</li><li>Cuando el cliente toque el enlace, la cita queda <b>confirmada</b>.</li></ol>`;
     html += `<h2 class="sec">Nuevas <span>${d.nuevas.length}</span></h2>`;
     html += d.nuevas.length ? d.nuevas.map((r) => resCard(r, true)).join('')
       : '<div class="empty"><p>No hay peticiones nuevas.</p></div>';
@@ -654,13 +705,12 @@
       const ds = `${S.calMonth}-${pad(d)}`;
       const info = month.days[ds];
       const cls = ['cd', ds === S.calDay && 'sel', ds === t && 'today', ds < t && 'past', isClosed(ds) && 'closed'].filter(Boolean).join(' ');
-      const label = `${d} de ${MESES[m - 1]}${info ? `, ${info.count} reservas, ${info.people} personas` : ''}${info && info.pending ? `, ${info.pending} por confirmar` : ''}${isClosed(ds) ? ', cerrado' : ''}`;
-      cells += `<button type="button" class="${cls}" data-day="${ds}" aria-label="${esc(label)}"><span class="n">${d}</span>${info ? `<span class="p">${info.people}p</span>` : ''}${info && info.pending ? '<i class="pd"></i>' : ''}</button>`;
+      const label = `${d} de ${MESES[m - 1]}${info ? `, ${info.count} ${info.count === 1 ? 'cita' : 'citas'}` : ''}${info && info.pending ? `, ${info.pending} por confirmar` : ''}${isClosed(ds) ? ', cerrado' : ''}`;
+      cells += `<button type="button" class="${cls}" data-day="${ds}" aria-label="${esc(label)}"><span class="n">${d}</span>${info ? `<span class="p">${info.count}</span>` : ''}${info && info.pending ? '<i class="pd"></i>' : ''}</button>`;
     }
 
     const dayClosed = closedDates.includes(S.calDay);
     const weekClosed = !(settings.hours[String(((parseISO(S.calDay).getDay() + 6) % 7) + 1)] || []).length;
-    if (can('reservas')) setFab('Nueva reserva', () => editReservation(null, S.calDay));
 
     return `<section class="cal">
         <div class="cal-head">
@@ -669,14 +719,14 @@
           <button class="cal-nav" type="button" data-month="1" aria-label="Mes siguiente">›</button>
         </div>
         <div class="cal-grid">${cells}</div>
-        <div class="cal-legend"><span><i style="background:var(--alga)"></i>personas reservadas</span><span><i style="background:#D89A2B;border-radius:50%"></i>por confirmar</span><span><i style="background:repeating-linear-gradient(-45deg,#F4EFEF 0 3px,#DDCFD3 3px 6px)"></i>cerrado</span></div>
+        <div class="cal-legend"><span><i style="background:var(--alga)"></i>número de citas</span><span><i style="background:#D89A2B;border-radius:50%"></i>por confirmar</span><span><i style="background:repeating-linear-gradient(-45deg,#F4EFEF 0 3px,#DDCFD3 3px 6px)"></i>cerrado</span></div>
       </section>
       <div class="day-head" style="margin-top:20px"><p class="day-date">${esc(fmtDay(S.calDay))}</p><p class="day-sum">${weekClosed ? 'Día de cierre semanal' : dayClosed ? 'Cerrado este día' : daySummary(dayList)}</p></div>
       <div class="day-tools">
         ${S.calDay !== t ? '<button class="btn btn-quiet btn-sm" data-goto-today>Ir a hoy</button>' : ''}
         ${can('reservas') && !weekClosed && S.calDay >= t ? `<button class="btn btn-line btn-sm" data-close-day="${dayClosed ? 'open' : 'close'}">${dayClosed ? 'Abrir este día' : 'Cerrar este día (festivo, vacaciones…)'}</button>` : ''}
       </div>
-      ${dayList.length ? turnosHTML(dayList) : '<div class="empty"><p>No hay reservas este día.</p></div>'}`;
+      ${dayList.length ? turnosHTML(dayList) : '<div class="empty"><p>No hay citas este día.</p></div>'}`;
   }
 
   async function toggleClosedDay(action) {
@@ -838,8 +888,10 @@
     // Si el servicio de la reserva ya no está en la lista (borrado), se ofrece igualmente para no perderlo
     const gone = r.service_id && !all.some((d) => d.id === r.service_id) ? `<option value="${r.service_id}" data-min="${r.duration}" selected>${esc(r.service)} (ya no está en la lista)</option>` : '';
     const ownMin = r.service_id && all.some((d) => d.id === r.service_id && d.duration !== r.duration) ? r.duration : '';
-    openSheet(isNew ? 'Nueva reserva' : 'Editar reserva', `
+    openSheet(isNew ? 'Nueva cita' : 'Editar cita', `
       <form class="form" id="res-edit" novalidate>
+        <label>Nombre <input name="name" value="${esc(r.name)}" autocomplete="off" required></label>
+        <label>Teléfono <input name="phone" type="tel" value="${esc(r.phone)}" required></label>
         <label>Servicio
           <select name="service_id">
             <option value="0" data-min="0">Sin elegir (${minText(defaultMin())})</option>
@@ -852,16 +904,15 @@
           <label>Hora <input type="time" name="time" value="${esc(r.time)}" step="300" required list="slot-list"></label>
         </div>
         <datalist id="slot-list"></datalist>
+        <div class="field slot-box" hidden><span id="slot-t"></span><div class="slot-chips" id="slot-chips"></div></div>
+        <p class="help" id="slot-info"></p>
         <div class="row">
           <label>Personas <input type="number" name="people" min="1" max="50" inputmode="numeric" value="${r.people}" required></label>
-          <label>Duración <span class="help">(min)</span><input type="number" name="duration" min="5" max="600" step="5" inputmode="numeric" value="${ownMin}" placeholder=""></label>
+          <label>Duración (min)<input type="number" name="duration" min="5" max="600" step="5" inputmode="numeric" value="${ownMin}" placeholder=""></label>
         </div>
-        <label>Nombre <input name="name" value="${esc(r.name)}" autocomplete="off" required></label>
-        <label>Teléfono <input name="phone" type="tel" value="${esc(r.phone)}" required></label>
         <label>Email <span class="help">(opcional)</span><input name="email" type="email" value="${esc(r.email)}"></label>
         <label>Notas <textarea name="notes" rows="2">${esc(r.notes)}</textarea></label>
-        <p class="help" id="slot-info"></p>
-        <div class="actions"><button class="btn btn-main" type="submit">${isNew ? 'Guardar reserva' : 'Guardar cambios'}</button></div>
+        <div class="actions"><button class="btn btn-main" type="submit">${isNew ? 'Guardar cita' : 'Guardar cambios'}</button></div>
       </form>`, (body) => {
       const f = $('#res-edit', body);
       const info = $('#slot-info', body);
@@ -873,9 +924,21 @@
         try {
           const d = await api(`slots_admin&date=${f.date.value}&minutes=${minutes()}${isNew ? '' : '&exclude=' + r.id}`);
           $('#slot-list', body).innerHTML = d.slots.map((s) => `<option value="${s.time}">${s.left} libres</option>`).join('');
-          info.textContent = d.slots.length ? `Puestos libres para ${minText(d.minutes)}: ` + d.slots.filter((s) => s.left > 0).map((s) => `${s.time} (${s.left})`).join(', ') : (d.reason || 'Ese día no hay horario de reservas.');
+          // Horas libres como botones: tocar una la pone en «Hora»
+          const free = d.slots.filter((s) => s.left > 0);
+          $('.slot-box', body).hidden = !free.length;
+          $('#slot-t', body).textContent = `Horas libres para ${minText(d.minutes)} (toca una)`;
+          $('#slot-chips', body).innerHTML = free.map((s) => `<button type="button" class="slot-chip${s.time === f.time.value ? ' sel' : ''}" data-slot="${s.time}">${s.time}</button>`).join('');
+          info.textContent = free.length ? '' : (d.reason || 'Ese día no queda ningún hueco libre.');
         } catch (e) { info.textContent = ''; }
       };
+      $('#slot-chips', body).addEventListener('click', (e) => {
+        const b = e.target.closest('[data-slot]');
+        if (!b) return;
+        f.time.value = b.dataset.slot;
+        $$('.slot-chip', body).forEach((x) => x.classList.toggle('sel', x === b));
+      });
+      f.time.addEventListener('change', () => $$('.slot-chip', body).forEach((x) => x.classList.toggle('sel', x.dataset.slot === f.time.value)));
       f.date.addEventListener('change', loadSlots);
       f.service_id.addEventListener('change', () => { f.duration.value = ''; loadSlots(); });
       f.duration.addEventListener('change', loadSlots);
@@ -889,7 +952,7 @@
         try {
           await api('reservation_save', { body: data });
           closeSheet();
-          toast(isNew ? 'Reserva apuntada' : 'Cambios guardados');
+          toast(isNew ? 'Cita apuntada' : 'Cambios guardados');
           render();
         } catch (err) { toast(err.message, 'err'); busy(btn, false); }
       });
@@ -909,12 +972,11 @@
     const off = cats.reduce((a, c) => a + c.services.filter((d) => !d.available).length, 0);
     let html = !canEdit ? '<p class="help" style="color:var(--granito);margin:0 0 8px">Solo lectura: tu usuario no puede cambiar los servicios.</p>' : '';
     html += `<div class="toolbar">${canEdit ? '<button class="btn btn-quiet btn-sm" data-cat-new>Nueva sección</button>' : ''}${S.base ? `<a class="btn btn-quiet btn-sm" href="${esc(S.base)}/#servicios" target="_blank" rel="noopener">Ver en la web</a>` : ''}</div>`;
-    html += packsCard;
     html += `<label class="search">${ICON.search}<input type="search" id="serv-q" placeholder="Buscar servicio" autocomplete="off" enterkeyhint="search"></label>`;
     if (cats.length > 1) html += `<div class="mcat-all"><button class="link-btn" type="button" data-cats-all>${cats.every((c) => catOpen().has(c.id)) ? 'Cerrar todas' : 'Abrir todas'}</button></div>`;
     if (cats.length > 1) html += `<nav class="jump" aria-label="Ir a una sección">${cats.map((c) => `<a href="#mcat-${c.id}" data-jump="${c.id}">${esc(c.name)} <span>${c.services.length}</span></a>`).join('')}</nav>`;
     if (off) html += `<p class="alert">${off} ${off === 1 ? 'servicio está desactivado' : 'servicios están desactivados'}: no ${off === 1 ? 'sale' : 'salen'} en la web ni se ${off === 1 ? 'puede' : 'pueden'} reservar.</p>`;
-    html += '<p class="help" style="margin:4px 0 0;color:var(--granito)">El interruptor quita o pone un servicio en la web y en las reservas al momento (por ejemplo, si esa técnica no está esta semana).</p>';
+    html += '<p class="help" style="margin:4px 0 0;color:var(--granito)">Toca un servicio para cambiarlo. El interruptor de la derecha lo enciende o lo apaga: apagado no sale en la web ni se puede reservar.</p>';
     for (const c of cats) {
       const coff = c.services.filter((d) => !d.available).length;
       html += `<details class="mcat" id="mcat-${c.id}" data-cat-id="${c.id}"${catOpen().has(c.id) ? ' open' : ''}>
@@ -933,14 +995,18 @@
       }
       html += '</div></details>';
     }
-    return html;
+    // Packs y la lista de la web, después de los servicios (lo que más se usa va primero)
+    return html + '<div class="packs-zone">' + packsCard + '</div>';
   }
 
   /* Secciones de servicios abiertas (se recuerdan en este móvil) */
   let catOpenSet = null;
   function catOpen() {
     if (!catOpenSet) {
-      try { catOpenSet = new Set(JSON.parse(localStorage.getItem('serviciosAbiertos') || '[]')); } catch (e) { catOpenSet = new Set(); }
+      // La primera vez se ven todas las secciones abiertas: así se entiende enseguida qué hay dentro
+      let saved = null;
+      try { saved = localStorage.getItem('serviciosAbiertos'); } catch (e) { /* sin almacenamiento */ }
+      try { catOpenSet = new Set(saved === null ? (S.svc ? S.svc.categories.map((c) => c.id) : []) : JSON.parse(saved)); } catch (e) { catOpenSet = new Set(); }
     }
     return catOpenSet;
   }
@@ -1363,7 +1429,7 @@
     const horarios = !admin ? '' : `
       ${sec('horario', 'Horario de apertura', 'Qué días abres y a qué horas', `
         <form class="form" data-form="horario" novalidate>
-          <p class="help">Es el horario que sale en la web y en el que se puede reservar. Para cerrar un día suelto (festivo, vacaciones), hazlo desde el Calendario.</p>
+          <p class="help">Es el horario que sale en la web y en el que se puede reservar. Para cerrar un día suelto (festivo, vacaciones), hazlo desde la Agenda.</p>
           ${hoursRows}
           <button class="btn btn-main" type="submit">Guardar horario</button>
         </form>`)}`;
@@ -1880,7 +1946,7 @@
     const wauto = t.closest('[data-wa-auto]');
     if (wauto) { e.stopPropagation(); autoSend(Number(wauto.dataset.waAuto), wauto); return; }
     const hd = t.closest('[data-hoy-day]');
-    if (hd) { S.hoyDay = hd.dataset.hoyDay; setTitle(S.hoyDay === todayISO() ? 'Hoy' : 'Reservas'); if (can('reservas')) setFab('Nueva reserva', () => editReservation(null, S.hoyDay)); return renderHoyBody($('#view')); }
+    if (hd) { S.hoyDay = hd.dataset.hoyDay; return renderHoyBody($('#view')); }
     const jp = t.closest('[data-jump]');
     if (t.closest('[data-cats-all]')) {
       const ds = $$('details.mcat'); const open = !ds.every((x) => x.open);
@@ -1901,7 +1967,9 @@
     }
     if (t.closest('a')) return;
     const open = t.closest('[data-open]');
-    if (open && open.classList.contains('res')) return showReservation(Number(open.dataset.open));
+    if (open && (open.classList.contains('res') || open.classList.contains('hero-next'))) return showReservation(Number(open.dataset.open));
+    if (t.closest('[data-new-service]')) return editService(null);
+    if (t.closest('[data-new-cita]')) return editReservation(null, newCitaDay());
     const nw = t.closest('[data-new]');
     if (nw) return editReservation(null, nw.dataset.new);
     const day = t.closest('[data-day]');

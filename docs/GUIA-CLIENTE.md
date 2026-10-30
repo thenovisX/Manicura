@@ -148,10 +148,14 @@ Los recordatorios salen cuando alguien visita la web o usa la app. Para que salg
 
 ## 6. El día a día
 
+La app tiene abajo un menú con cinco botones, como cualquier app del móvil: **Inicio**, **Agenda**, el botón redondo **+ Nueva cita** en el centro, **Peticiones** y **Servicios**. Los **Ajustes** están en el botón redondo de arriba a la derecha. En el ordenador, todo esto sale en el menú de la izquierda.
+
+En **Inicio** ves de un vistazo cuántas citas te quedan hoy, cuál es la siguiente, si hay clientes esperando respuesta y unos accesos rápidos (nueva cita, agenda, añadir servicio y ver tu web).
+
 1. **Llega una cita:** el móvil avisa (activa los avisos en **Ajustes → Cuenta → Avisos de reservas**) y además te llega un email. La verás en **Peticiones**, con el servicio que ha elegido y a qué hora termina.
 2. **La aceptas:** pulsa **Confirmar por WhatsApp**, o «Aceptar y enviar WhatsApp automático» si lo tienes activado. El cliente recibe un enlace y, cuando lo abre y pulsa confirmar, la app te avisa.
 3. **No hay hueco:** pulsa **Rechazar**. La app te propone un WhatsApp con las horas libres de ese día para ese servicio.
-4. **Hoy y Calendario:** ves las reservas del día y de cualquier fecha. Las que te pidan por teléfono o en el salón las apuntas con el botón **Nueva reserva**: eliges el servicio y, si hace falta, cambias la duración. En el Calendario también cierras días sueltos (festivos o vacaciones).
+4. **Inicio y Agenda:** ves las citas del día y de cualquier fecha. Las que te pidan por teléfono o en el salón las apuntas con el botón **+ Nueva cita**: escribes el nombre y el teléfono, eliges el servicio y tocas una de las horas libres. En la Agenda también cierras días sueltos (festivos o vacaciones).
 5. **Si el cliente cancela**, desde su enlace o desde su cuenta, la app te avisa.
 
 ---
@@ -165,7 +169,7 @@ Mira en la carpeta de spam. Configura Gmail (apartado 4.1) y pulsa «Enviar un e
 Que mire en spam y espere un par de minutos: si lo pide varias veces seguidas, solo se manda uno cada 2 minutos. El enlace caduca en 1 hora.
 
 **Quiero cerrar por vacaciones.**
-En la pestaña **Calendario**, toca cada día y pulsa **«Cerrar este día (festivo, vacaciones…)»**. Ese día ya no se podrá reservar por internet. Para volver a abrirlo, pulsa **«Abrir este día»**.
+En la **Agenda**, toca cada día y pulsa **«Cerrar este día (festivo, vacaciones…)»**. Ese día ya no se podrá reservar por internet. Para volver a abrirlo, pulsa **«Abrir este día»**.
 
 **Un cliente quiere que borremos sus datos.**
 Puede hacerlo desde **Borrar mis datos**, en el pie de la web. Si te lo pide a ti, lo tienes en **Ajustes → Cuenta → Clientes con cuenta**.
