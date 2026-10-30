@@ -20,7 +20,7 @@ Base reutilizable para hacer la web de un salón de manicura y uñas. Para cada 
 - **SEO** (descripción, datos estructurados `NailSalon` con rango de precios, sitemap, Search Console) e **instalable como app** (PWA).
 - **Seguridad**: datos personales cifrados, borrado a las 24 h y bloqueo por intentos fallidos. Ver [SEGURIDAD.md](SEGURIDAD.md).
 
-Incluye un tema de ejemplo («Base», en tonos rosa y ciruela) para que la web funcione desde el primer momento. Las fotos del tema (`web/tema/assets/img/`) son dibujos de ejemplo: cámbialas por fotos del salón y de sus trabajos.
+Incluye un tema completo («Laca»: fondo de laca líquida en WebGL, scroll con inercia, escenas fijas y cursor magnético, en negro charol, granate y rosa) para que la web funcione desde el primer momento. Su JavaScript se compila desde `web/tema/fuente/` (ver su `LEEME.md`). Las fotos del tema (`web/tema/assets/img/`) son dibujos de ejemplo: cámbialas por fotos del salón y de sus trabajos.
 
 Está hecha a partir del backend para restaurantes, con la misma estructura: la carta pasa a ser **servicios** (con duración), los menús pasan a ser **packs**, el aforo de mesas pasa a ser **puestos** y desaparecen los alérgenos y el horario de cocina.
 
@@ -47,7 +47,7 @@ API.md              → todas las rutas de la API
 
 1. En GitHub, abre este repositorio y pulsa **Use this template → Create a new repository**. Ponle el nombre del cliente (por ejemplo `web-unas-lucia`) y márcalo como **Private**.
    (Si no ves el botón: Settings → General → marca **Template repository**.)
-2. Haz el diseño **solo dentro de `web/tema/`**. Puedes partir del tema Base o borrarlo y empezar de cero. Lo que tiene que tener está en [TEMA.md](TEMA.md).
+2. Haz el diseño **solo dentro de `web/tema/`**. Puedes partir del tema Laca o borrarlo y empezar de cero. Lo que tiene que tener está en [TEMA.md](TEMA.md).
 3. Cada vez que subas cambios a `main`, GitHub prepara sola la rama **`hostinger`** con la web lista para publicar.
 4. En Hostinger: conecta esa rama y abre `install.php` (pasos abajo).
 5. En la app de gestión, rellena los datos del cliente: nombre, contacto, horario, servicios, puestos, titular y NIF, y (si quieres) el Gmail para los emails.
