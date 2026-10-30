@@ -127,7 +127,7 @@ Pon también `<?= $cancelar_form('Cancelar la reserva', 'mi-clase') ?>`: deja al
 
 ## Reservar: `data-book`
 
-Cualquier elemento con `data-book` abre la ventana de reserva, por ejemplo `<a href="#reservar" data-book>Reservar cita</a>`. No hace falta nada más. Con `data-book-service="ID"` la ventana se abre con ese servicio ya elegido.
+Cualquier elemento con `data-book` abre la ventana de reserva, por ejemplo `<a href="#reservar" data-book>Reservar cita</a>`. No hace falta nada más. Con `data-book-service="ID"` la ventana se abre con ese servicio ya elegido, y con `data-book-notes="texto"` con las notas escritas (útil para un pack: el servicio queda en «Aún no lo sé»). La ventana tiene 4 pasos (servicio, día y hora, tus datos, revisar y enviar) y un resumen «Tu cita» siempre visible con servicio, duración, precio, personas, día y hora.
 
 La ventana pregunta qué servicio quiere (por secciones, con precio y duración, o «Aún no lo sé»), cuántas personas vienen (hasta `max_people`; cada persona ocupa un puesto), el día y la hora. Solo ofrece las horas en las que el servicio cabe entero antes del cierre del turno y hay puestos libres durante toda la cita. Las horas salen agrupadas en «Mañana» y «Tarde».
 

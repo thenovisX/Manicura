@@ -1,6 +1,6 @@
 <?php
 /*
- * Piezas comunes del tema Laca: abrir() pinta el <head>, el fondo de laca líquida y la cabecera; cerrar(), el pie.
+ * Piezas comunes del tema Laca: abrir() pinta el <head>, el fondo de laca y la cabecera (con «Reservar» siempre a la vista); cerrar(), el pie.
  * Lo único obligatorio en cualquier tema: llamar a head_tags() dentro de <head> y a body_end() antes de </body>,
  * y tener en el pie los enlaces legales y cookies_link().
  */
@@ -28,14 +28,14 @@ function abrir(string $titulo, string $clase = ''): void
 <header class="cab">
   <a class="cab-marca" href="./"><?= h($s['name']) ?></a>
   <nav class="cab-nav" id="menu" aria-label="<?= t('Principal') ?>">
-    <?php if (servicios_on() || !packs_public()): ?><a href="./#servicios"><span>01</span><?= t('Servicios') ?></a><?php endif; ?>
-    <?php if (packs_public()): ?><a href="./#packs"><span>02</span><?= t('Packs') ?></a><?php endif; ?>
-    <a href="./#nosotros"><span>03</span><?= t('Nosotros') ?></a>
-    <a href="./#visitanos"><span>04</span><?= t('Visítanos') ?></a>
-    <a href="cuenta.php"><span>05</span><?= $c ? t('Mi cuenta') : t('Entrar') ?></a>
+    <?php if (servicios_on() || !packs_public()): ?><a href="./#servicios"><?= t('Servicios') ?></a><?php endif; ?>
+    <?php if (packs_public()): ?><a href="./#packs"><?= t('Packs') ?></a><?php endif; ?>
+    <a href="./#nosotros"><?= t('Nosotros') ?></a>
+    <a href="./#visitanos"><?= t('Visítanos') ?></a>
+    <a href="cuenta.php"><?= $c ? t('Mi cuenta') : t('Entrar') ?></a>
   </nav>
   <?= selector_idioma('cab-idiomas') ?>
-  <a class="pill pill-llena cab-reservar" href="./#reservar" data-book data-magnet><?= t('Reservar') ?></a>
+  <a class="pill pill-llena cab-reservar" href="./#reservar" data-book><?= t('Reservar') ?></a>
   <button class="cab-menu" type="button" aria-expanded="false" aria-controls="menu" aria-label="<?= t('Menú') ?>" data-menu><span></span><span></span></button>
 </header>
     <?php
@@ -67,7 +67,6 @@ function cerrar(): void
     <h2><?= t('Información') ?></h2>
     <a href="cuenta.php"><?= t('Mi cuenta') ?></a><a href="legal.php#politicas"><?= t('Políticas de reserva') ?></a><a href="legal.php#aviso"><?= t('Aviso legal') ?></a><a href="legal.php#privacidad"><?= t('Privacidad') ?></a><a href="borrar-datos.php"><?= t('Borrar mis datos') ?></a><a href="legal.php#cookies">Cookies</a><?= cookies_link() ?>
   </nav>
-  <p class="pie-marca" aria-hidden="true"><?= h($s['name']) ?></p>
   <p class="pie-legal">© <?= date('Y') ?> <?= h($s['name']) ?>.<?php $cr = photo_credits(); if ($cr): ?> <?= t('Fotos de') ?> <?php $i = 0; foreach ($cr as $p): ?><?= $i++ ? ', ' : '' ?><a href="<?= h($p['url']) ?>" target="_blank" rel="noopener"><?= h($p['by']) ?></a><?php endforeach; ?> <?= t('en Unsplash') ?>.<?php endif; ?></p>
 </footer>
 <?php body_end(); ?>

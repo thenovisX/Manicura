@@ -1,7 +1,7 @@
 <?php
 /*
- * Ventana de reserva en 3 pasos (la controla sdk/salon.js): servicio, personas y día; hora; datos. Se abre con cualquier elemento que
- * tenga el atributo data-book. Sus colores y tipografías se cambian desde el tema con variables CSS
+ * Ventana de reserva en 4 pasos (la controla sdk/salon.js): servicio; día y hora; tus datos; revisar y enviar. Arriba lleva siempre
+ * el resumen de la cita (servicio, duración, precio, personas, día y hora). Se abre con cualquier elemento que tenga el atributo data-book. Sus colores y tipografías se cambian desde el tema con variables CSS
  * (--r-bg, --r-text, --r-accent…; ver TEMA.md). Todas sus clases empiezan por bk- para no chocar con el tema.
  */
 $s = settings();
@@ -15,12 +15,27 @@ $maxP = (int)$s['max_people'];
   <form class="bk-in" id="bk-form" method="dialog" novalidate>
     <header class="bk-head">
       <div>
-        <p class="bk-step" id="bk-step"><?= t('Paso %d de 3', 1) ?></p>
+        <p class="bk-step" id="bk-step"><?= t('Paso %d de 4', 1) ?></p>
         <h2 class="bk-h" id="bk-title"><?= t('Reservar cita') ?></h2>
-        <p class="bk-sum" id="bk-sum" aria-live="polite"></p>
       </div>
       <button class="bk-close" type="button" data-close aria-label="<?= t('Cerrar') ?>">×</button>
     </header>
+    <ol class="bk-steps" id="bk-steps" aria-hidden="true">
+      <li data-s="1"><?= t('Servicio') ?></li><li data-s="2"><?= t('Día y hora') ?></li><li data-s="3"><?= t('Tus datos') ?></li><li data-s="4"><?= t('Revisar') ?></li>
+    </ol>
+
+    <!-- Resumen de la cita: siempre a la vista desde el paso 1. Cada fila lleva al paso donde se cambia. -->
+    <section class="bk-resumen" id="bk-resumen" aria-label="<?= t('Tu cita') ?>" aria-live="polite" hidden>
+      <p class="bk-resumen-t"><?= t('Tu cita') ?></p>
+      <dl>
+        <div data-go="1"><dt data-cambiar="<?= t('cambiar') ?>"><?= t('Servicio') ?></dt><dd id="bk-r-svc"></dd></div>
+        <div data-go="1" id="bk-r-dura-f"><dt><?= t('Duración') ?></dt><dd id="bk-r-dura"></dd></div>
+        <div data-go="1" id="bk-r-precio-f"><dt><?= t('Precio') ?></dt><dd id="bk-r-precio"></dd></div>
+        <div data-go="1" id="bk-r-people-f" hidden><dt data-cambiar="<?= t('cambiar') ?>"><?= t('Personas') ?></dt><dd id="bk-r-people"></dd></div>
+        <div data-go="2"><dt data-cambiar="<?= t('cambiar') ?>"><?= t('Día') ?></dt><dd id="bk-r-dia"></dd></div>
+        <div data-go="2"><dt data-cambiar="<?= t('cambiar') ?>"><?= t('Hora') ?></dt><dd id="bk-r-hora"></dd></div>
+      </dl>
+    </section>
 
     <?php if ($hayOpc): ?>
     <section class="bk-pane" data-pane="0" hidden>
@@ -47,16 +62,20 @@ $maxP = (int)$s['max_people'];
 
     <section class="bk-pane" data-pane="1">
       <?php if ($servicios): ?>
-      <label class="bk-svc"><?= t('¿Qué te quieres hacer?') ?>
-        <select name="service" id="bk-service">
+      <fieldset>
+        <legend><?= t('¿Qué te quieres hacer?') ?></legend>
+        <div class="bk-svcs" id="bk-svcs">
           <?php foreach ($servicios as $sec): ?>
-            <optgroup label="<?= h($sec['name']) ?>">
-              <?php foreach ($sec['services'] as $d): ?><option value="<?= $d['id'] ?>" data-min="<?= $d['duration'] ?>"><?= h($d['name']) ?> · <?= h($d['time']) ?> · <?= h($d['price']) ?></option><?php endforeach; ?>
-            </optgroup>
+            <p class="bk-svc-sec"><?= h($sec['name']) ?></p>
+            <?php foreach ($sec['services'] as $d): ?>
+              <label class="bk-svc-op"><input type="radio" name="service" value="<?= $d['id'] ?>"><span><b><?= h($d['name']) ?></b><small><?= h($d['time']) ?></small><em><?= h($d['price']) ?></em></span></label>
+            <?php endforeach; ?>
           <?php endforeach; ?>
-          <option value="0"><?= t('Aún no lo sé: os lo cuento en las notas') ?></option>
-        </select>
-      </label>
+          <label class="bk-svc-op bk-svc-nose"><input type="radio" name="service" value="0"><span><b><?= t('Aún no lo sé') ?></b><small><?= t('Os lo cuento en las notas (también para packs)') ?></small></span></label>
+        </div>
+      </fieldset>
+      <?php else: ?>
+        <input type="hidden" name="service" value="0">
       <?php endif; ?>
       <?php if ($maxP > 1): ?>
       <fieldset>
@@ -72,17 +91,21 @@ $maxP = (int)$s['max_people'];
         <p class="bk-help"><?= t('Cada persona ocupa un puesto a la vez, con el mismo servicio. Si queréis servicios distintos, decídnoslo en las notas.') ?></p>
       </fieldset>
       <?php endif; ?>
+      <p class="bk-err" id="bk-err1" role="alert"></p>
+      <div class="bk-nav"><?php if ($hayOpc): ?><button class="bk-btn" type="button" data-next="0"><?= t('Atrás') ?></button><?php endif; ?><button class="bk-btn bk-btn-main" type="button" data-next="2" id="bk-to2"><?= t('Siguiente: día y hora') ?></button></div>
+    </section>
+
+    <section class="bk-pane" data-pane="2" hidden>
       <fieldset>
         <legend><?= t('¿Qué día?') ?></legend>
         <div class="bk-days" id="bk-days" role="radiogroup" aria-label="<?= t('Día') ?>"></div>
         <label class="bk-other"><?= t('Otra fecha') ?> <input type="date" id="bk-date"></label>
       </fieldset>
-      <div class="bk-nav"><?php if ($s['phone']): ?><button class="bk-btn" type="button" data-next="0"><?= t('Atrás') ?></button><?php endif; ?><button class="bk-btn bk-btn-main" type="button" data-next="2"><?= t('Ver horas libres') ?></button></div>
-    </section>
-
-    <section class="bk-pane" data-pane="2" hidden>
-      <div id="bk-slots" class="bk-slots" aria-live="polite"></div>
-      <div class="bk-nav"><button class="bk-btn" type="button" data-next="1"><?= t('Atrás') ?></button><button class="bk-btn bk-btn-main" type="button" data-next="3" id="bk-to3" disabled><?= t('Continuar') ?></button></div>
+      <fieldset>
+        <legend><?= t('¿A qué hora?') ?></legend>
+        <div id="bk-slots" class="bk-slots" aria-live="polite"></div>
+      </fieldset>
+      <div class="bk-nav"><button class="bk-btn" type="button" data-next="1"><?= t('Atrás') ?></button><button class="bk-btn bk-btn-main" type="button" data-next="3" id="bk-to3" disabled><?= t('Siguiente: tus datos') ?></button></div>
     </section>
 
     <section class="bk-pane" data-pane="3" hidden>
@@ -99,16 +122,28 @@ $maxP = (int)$s['max_people'];
       </div>
       <label><?= t('Algo que debamos saber') ?> <span><?= t('opcional') ?></span><textarea name="notes" rows="2" maxlength="500" placeholder="<?= t('Diseño o color que te gustaría, alergias, si vienes con gel de otro salón…') ?>"></textarea></label>
       <label class="bk-hp" aria-hidden="true"><?= t('No rellenar') ?> <input name="website" tabindex="-1" autocomplete="off"></label>
+      <p class="bk-err" id="bk-err3" role="alert"></p>
+      <div class="bk-nav"><button class="bk-btn" type="button" data-next="2"><?= t('Atrás') ?></button><button class="bk-btn bk-btn-main" type="button" id="bk-to4"><?= t('Siguiente: revisar') ?></button></div>
+    </section>
+
+    <section class="bk-pane" data-pane="4" hidden>
+      <p class="bk-lead"><?= t('Revisa que todo está bien. Aún no está reservado: el salón te confirmará por WhatsApp.') ?></p>
+      <dl class="bk-datos" id="bk-datos">
+        <div><dt><?= t('A nombre de') ?></dt><dd id="bk-d-name"></dd></div>
+        <div><dt><?= t('Teléfono') ?></dt><dd id="bk-d-phone"></dd></div>
+        <div id="bk-d-email-f"><dt>Email</dt><dd id="bk-d-email"></dd></div>
+        <div id="bk-d-notes-f"><dt><?= t('Notas') ?></dt><dd id="bk-d-notes"></dd></div>
+      </dl>
       <div class="bk-policy">
         <p><?= t('Cancelar es siempre gratis. Guardamos la cita %d minutos.', (int)$s['late_minutes']) ?></p>
         <label class="bk-check"><input type="checkbox" name="privacy" value="1"><span><?= t('Acepto las <a href="legal.php#politicas" target="_blank">políticas de reserva</a> y las <a href="legal.php#condiciones" target="_blank">condiciones de uso</a>, y he leído la <a href="legal.php#privacidad" target="_blank">política de privacidad</a>.') ?></span></label>
         <p class="bk-info"><?= t('<strong>Protección de datos.</strong> Responsable: %s. Finalidad: gestionar tu reserva; el teléfono solo se usa para enviarte el WhatsApp de confirmación. Tus datos se borran 24 horas después de la reserva y no se ceden a nadie. Puedes acceder a ellos, corregirlos o borrarlos escribiendo a %s.', h($s['owner_name'] ?: $s['name']), h($s['email'] ?: $s['phone'] ?: t('nuestro contacto'))) ?> <a href="legal.php#privacidad" target="_blank"><?= t('Más información') ?></a>.</p>
       </div>
       <p class="bk-err" id="bk-err" role="alert"></p>
-      <div class="bk-nav"><button class="bk-btn" type="button" data-next="2"><?= t('Atrás') ?></button><button class="bk-btn bk-btn-main" type="button" id="bk-send"><?= t('Enviar petición') ?></button></div>
+      <div class="bk-nav"><button class="bk-btn" type="button" data-next="3"><?= t('Atrás') ?></button><button class="bk-btn bk-btn-main" type="button" id="bk-send"><?= t('Enviar petición') ?></button></div>
     </section>
 
-    <section class="bk-pane bk-done" data-pane="4" hidden>
+    <section class="bk-pane bk-done" data-pane="5" hidden>
       <p class="bk-done-mark" aria-hidden="true">✓</p>
       <h3 class="bk-h" id="bk-done-t"></h3>
       <p id="bk-done-msg"></p>
