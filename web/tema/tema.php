@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 const TEMA_NOMBRE = 'Laca';
 /** Súbela cuando cambies el CSS o el JS del tema, para que los navegadores descarguen la versión nueva. */
-const TEMA_VERSION = '3';
+const TEMA_VERSION = '4';
 
 /** Colores para el icono de la app, la barra del navegador y el manifest. */
 const TEMA_COLORES = [
