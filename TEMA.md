@@ -200,7 +200,7 @@ El salón crea en la app (pestaña Servicios) los packs y bonos que quiera (novi
 
 - `$packs_button`: si es `true` (y hay packs), pon en la portada un botón «Ver packs» que lleve a los packs. El salón lo activa o lo quita desde la app.
 
-Pon los packs en su propia sección (`id="packs"`), separada de los servicios. Usa `id="pack-<?= h($m['id']) ?>"` en cada pack para poder enlazarlo. Si un servicio del pack tiene foto, ponle `data-zoom`. Pinta el suplemento como `+<?= euros($d['extra']) ?> €` solo si `extra > 0`, «Hoy sí / Hoy no» solo si no es `every_day`, y «a elegir» si un apartado tiene más de un servicio. Textos fijos ya traducidos: «Packs», «Hoy sí», «Hoy no», «a elegir», «Suplemento». Los packs no tienen duración propia: el tema Base explica que se reservan eligiendo «Aún no lo sé» y diciendo en las notas cuál. Fuera de los temas, `packs_public()` y `servicios_on()` dan lo mismo.
+Pon los packs en su propia sección (`id="packs"`), separada de los servicios. Usa `id="pack-<?= h($m['id']) ?>"` en cada pack para poder enlazarlo. Si un servicio del pack tiene foto, ponle `data-zoom`. Pinta el suplemento como `+<?= euros($d['extra']) ?> €` solo si `extra > 0`, «Hoy sí / Hoy no» solo si no es `every_day`, y «a elegir» si un apartado tiene más de un servicio. Textos fijos ya traducidos: «Packs», «Hoy sí», «Hoy no», «a elegir», «Suplemento». Los packs no tienen duración propia: el tema Laca explica que se reservan eligiendo «Aún no lo sé» y diciendo en las notas cuál. Fuera de los temas, `packs_public()` y `servicios_on()` dan lo mismo.
 
 ## Fotos ampliables
 

@@ -42,7 +42,7 @@ jobs:
           # Sustituye todo por el contenido de web/ sin tocar .git
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a "$SRC"/. .
-          rm -rf data/sesiones data/*.sqlite config.php
+          rm -rf data/sesiones data/*.sqlite config.php tema/fuente
           printf 'config.php\ndata/*.sqlite\ndata/sesiones/\nuploads/*\n!uploads/.htaccess\n!uploads/.gitkeep\n' > .gitignore
           git add -A
           if git diff --cached --quiet; then
