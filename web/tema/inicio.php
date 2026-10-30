@@ -139,6 +139,7 @@ $pasos = [
       </article>
       <?php endforeach; ?>
     </div>
+    <?php if (count($packs) > 1): ?><p class="packs-n" aria-hidden="true"><b>01</b> / <?= sprintf('%02d', count($packs)) ?> <i></i> <?= t('Desliza') ?></p><?php endif; ?>
   </section>
   <?php endif; ?>
 
@@ -168,4 +169,5 @@ $pasos = [
     <p data-install-done hidden class="nota"><?= t('Ya la tienes instalada.') ?></p>
   </section>
 </main>
+<a class="pill pill-llena flota" href="#reservar" data-book><?= t('Reservar cita') ?></a>
 <?php cerrar();

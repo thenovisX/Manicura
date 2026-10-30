@@ -17,6 +17,13 @@ html.classList.replace('sin-js', 'js');
 const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (quieto) html.classList.add('quieto');
 
+// Pantalla táctil (sin ratón) y móviles modestos: menos trabajo para la GPU
+const tactil = matchMedia('(hover: none), (pointer: coarse)').matches;
+const modesto = !!(navigator.connection?.saveData || (navigator.deviceMemory && navigator.deviceMemory <= 2));
+if (tactil) html.classList.add('tactil');
+// La barra del navegador del móvil cambia la altura al bajar: no recalcular las escenas por eso
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
 
@@ -101,8 +108,9 @@ function escenas(lenis, laca) {
 
     // Fotos con parallax suave (data-parallax = cuánto se desplazan, en %)
     $$('[data-parallax]').forEach((el) => {
-      gsap.fromTo(el, { yPercent: -el.dataset.parallax }, {
-        yPercent: +el.dataset.parallax, ease: 'none',
+      const k = innerWidth < 761 ? 0.35 : 1;
+      gsap.fromTo(el, { yPercent: -el.dataset.parallax * k }, {
+        yPercent: +el.dataset.parallax * k, ease: 'none',
         scrollTrigger: { trigger: el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
       });
     });
@@ -131,13 +139,18 @@ function escenas(lenis, laca) {
       const n = $('.viaje-n b');
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: '.viaje', start: 'top top', end: () => '+=' + innerHeight * capas.length * 1.1, pin: true, scrub: 1,
+          trigger: '.viaje', start: 'top top', end: () => '+=' + innerHeight * capas.length * (tactil ? 0.9 : 1.1), pin: true, scrub: 1, anticipatePin: 1,
           onUpdate: (st) => { if (n) n.textContent = String(Math.min(capas.length, Math.floor(st.progress * capas.length) + 1)).padStart(2, '0'); },
         },
       });
+      // El desenfoque es caro en el móvil: allí las capas solo crecen y se desvanecen
+      const borroso = (px) => (tactil ? {} : { filter: `blur(${px}px)` });
+      // En el móvil las capas comparten sitio: cada una se va del todo antes de que llegue la siguiente
+      const entra = tactil ? 0.75 : 1, sale = tactil ? 0.45 : 0.9, espera = tactil ? 0.85 : 1.15;
       capas.forEach((c, i) => {
-        tl.fromTo(c, { scale: 0.5, opacity: 0, z: -600, filter: 'blur(14px)' }, { scale: 1, opacity: 1, z: 0, filter: 'blur(0px)', duration: 1, ease: 'power2.out' }, i * 1.1);
-        if (i < capas.length - 1) tl.to(c, { scale: 2.6, opacity: 0, z: 400, filter: 'blur(10px)', duration: 0.9, ease: 'power2.in' }, i * 1.1 + 1.15);
+        const t = i * 1.1 + (tactil && i ? 0.35 : 0);
+        tl.fromTo(c, { scale: 0.5, opacity: 0, z: -600, ...borroso(14) }, { scale: 1, opacity: 1, z: 0, ...borroso(0), duration: entra, ease: 'power2.out' }, t);
+        if (i < capas.length - 1) tl.to(c, { scale: tactil ? 1.5 : 2.6, opacity: 0, z: 400, ...borroso(10), duration: sale, ease: 'power2.in' }, i * 1.1 + espera);
       });
       tl.fromTo('.viaje-gota', { scale: 0.4, rotate: -30 }, { scale: 1.6, rotate: 30, duration: capas.length * 1.1 + 1, ease: 'none' }, 0);
     }
@@ -163,7 +176,7 @@ function escenas(lenis, laca) {
   });
 
   // Packs: en pantallas anchas la sección se fija y las tarjetas cruzan de lado
-  mm.add('(prefers-reduced-motion: no-preference) and (min-width: 761px)', () => {
+  mm.add('(prefers-reduced-motion: no-preference) and (min-width: 761px) and (min-height: 600px)', () => {
     const pista = $('.packs-pista');
     if (!pista) return;
     html.classList.add('packs-fijos');
@@ -199,6 +212,49 @@ function escenas(lenis, laca) {
     $('.servicios')?.addEventListener('pointerleave', () => { muestra.classList.remove('on'); laca.tono(null); });
   }
 
+  // Pista de packs deslizable (móvil, pantallas bajas): contador y barra de avance
+  const pistaPacks = $('.packs-pista'), cuenta = $('.packs-n');
+  if (pistaPacks && cuenta) {
+    const packs = $$('.pack', pistaPacks), b = $('b', cuenta);
+    const avance = () => {
+      const max = pistaPacks.scrollWidth - pistaPacks.clientWidth;
+      const p = max > 0 ? pistaPacks.scrollLeft / max : 0;
+      b.textContent = String(Math.round(p * (packs.length - 1)) + 1).padStart(2, '0');
+      cuenta.style.setProperty('--avance', String(Math.max(0.1, p)));
+    };
+    pistaPacks.addEventListener('scroll', avance, { passive: true });
+    avance();
+  }
+
+  // En el móvil, la fila de servicio que pasa por el centro de la pantalla se «esmalta» y tiñe la laca
+  if (tactil) {
+    $$('.serv').forEach((li) => {
+      ScrollTrigger.create({
+        trigger: li, start: 'top 58%', end: 'bottom 42%',
+        onToggle: (st) => {
+          li.classList.toggle('activa', st.isActive);
+          if (st.isActive) laca.tono(getComputedStyle(li).getPropertyValue('--tono').trim());
+        },
+      });
+    });
+    ScrollTrigger.create({ trigger: '.servicios', start: 'top bottom', end: 'bottom top', onLeave: () => laca.tono(null), onLeaveBack: () => laca.tono(null) });
+  }
+
+  // Botón flotante «Reservar cita» (móvil): entre la portada y la sección de reservar
+  const flota = $('.flota');
+  if (flota && $('.portada')) {
+    const ver = () => {
+      const y = scrollY, cierre = $('.cierre');
+      const fin = cierre ? cierre.getBoundingClientRect().top + y - innerHeight * 0.6 : Infinity;
+      // Durante el viaje en 3D no se pone delante de la escena
+      const v = $('.viaje')?.getBoundingClientRect();
+      const enViaje = v && v.top <= 1 && v.bottom >= innerHeight - 1;
+      flota.classList.toggle('on', y > innerHeight * 0.8 && y < fin && !enViaje);
+    };
+    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: ver });
+    ver();
+  }
+
   // Las fuentes cambian la altura de los textos: se recalculan las escenas al cargarlas
   document.fonts?.ready.then(() => ScrollTrigger.refresh());
   addEventListener('load', () => ScrollTrigger.refresh());
@@ -207,7 +263,7 @@ function escenas(lenis, laca) {
 
 function iniciar() {
   menu();
-  const laca = liquido($('.liquido'), { quieto, calma: !document.body.classList.contains('inicio') });
+  const laca = liquido($('.liquido'), { quieto: quieto || modesto, calma: !document.body.classList.contains('inicio') });
   cursor();
   const lenis = scrollSuave();
   escenas(lenis, laca);

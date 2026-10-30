@@ -45,6 +45,7 @@ return [
         '¿Algún dato está mal? No la confirmes: <a href="./#reservar" data-book>haz una reserva nueva</a> con los datos correctos.' => ['en' => 'Is any detail wrong? Do not confirm it: <a href="./#reservar" data-book>make a new booking</a> with the right details.', 'pt' => 'Algum dado está errado? Não a confirme: <a href="./#reservar" data-book>faça uma nova reserva</a> com os dados corretos.', 'gl' => 'Hai algún dato mal? Non a confirmes: <a href="./#reservar" data-book>fai unha reserva nova</a> cos datos correctos.'],
         '¿Algún cambio? Llámanos al %s.' => ['en' => 'Any changes? Call us on %s.', 'pt' => 'Alguma alteração? Ligue-nos para o %s.', 'gl' => 'Algún cambio? Chámanos ao %s.'],
         // Tema Laca
+        'Desliza' => ['en' => 'Swipe', 'pt' => 'Deslize', 'gl' => 'Esvara'],
         'Reserva online' => ['en' => 'Book online', 'pt' => 'Marcação online', 'gl' => 'Reserva en liña'],
         'Te confirmamos por WhatsApp' => ['en' => 'We confirm by WhatsApp', 'pt' => 'Confirmamos por WhatsApp', 'gl' => 'Confirmámosche por WhatsApp'],
         'Cancelar es siempre gratis' => ['en' => 'Cancelling is always free', 'pt' => 'Cancelar é sempre grátis', 'gl' => 'Cancelar é sempre de balde'],

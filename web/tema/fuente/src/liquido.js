@@ -85,7 +85,7 @@ void main(){ vUv = uv; gl_Position = vec4(position, 0.0, 1.0); }`;
 const hex = (c) => { const n = parseInt(c.replace('#', ''), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
 
 export function liquido(el, { quieto, calma }) {
-  const tactil = matchMedia('(pointer: coarse)').matches;
+  const tactil = matchMedia('(hover: none), (pointer: coarse)').matches;
   let renderer;
   try {
     renderer = new Renderer({ dpr: Math.min(devicePixelRatio, tactil ? 1 : 1.5) * (tactil ? 0.6 : 0.8), alpha: false, antialias: false, powerPreference: 'high-performance' });
@@ -119,11 +119,23 @@ export function liquido(el, { quieto, calma }) {
   addEventListener('pointerdown', (e) => {
     u.uGota.value.set(e.clientX / innerWidth, 1 - e.clientY / innerHeight, u.uTime.value);
   }, { passive: true });
+  // Con el dedo: el brillo sigue al dedo mientras deslizas y, si no tocas, pasea solo por la pantalla
+  let tocado = -99;
+  if (tactil) {
+    addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (t) { destino.set(t.clientX / innerWidth, 1 - t.clientY / innerHeight); tocado = u.uTime.value; }
+    }, { passive: true });
+  }
 
   const t0 = performance.now();
   let raf = 0;
   const frame = () => {
     u.uTime.value = (performance.now() - t0) / 1000;
+    if (tactil && u.uTime.value - tocado > 2.5) {
+      const k = u.uTime.value * 0.18;
+      destino.set(0.5 + Math.sin(k) * 0.32, 0.5 + Math.cos(k * 1.3) * 0.28);
+    }
     u.uMouse.value.lerp(destino, 0.05);
     u.uHover.value += (hover - u.uHover.value) * 0.06;
     u.uTinte.value += (tinte - u.uTinte.value) * 0.05;
@@ -132,7 +144,9 @@ export function liquido(el, { quieto, calma }) {
     u.uScroll.value += ((max > 0 ? scrollY / max : 0) - u.uScroll.value) * 0.08;
     renderer.render({ scene: mesh });
   };
-  const loop = () => { frame(); raf = requestAnimationFrame(loop); };
+  // En el móvil basta con 30 imágenes por segundo: el líquido se mueve despacio y la batería lo agradece
+  let impar = false;
+  const loop = () => { impar = !impar; if (!tactil || impar) frame(); raf = requestAnimationFrame(loop); };
   if (quieto) { u.uTime.value = 12; renderer.render({ scene: mesh }); }
   else {
     loop();
