@@ -45,6 +45,8 @@
   --sans: "Hanken Grotesk", system-ui, sans-serif;
   --cab: 76px;
   --lado: clamp(16px, 4vw, 70px);
+  /* Margen lateral en pantallas muy anchas: el contenido (1500 px) queda centrado y la cabecera y el pie se alinean con él */
+  --borde: max(var(--lado), calc((100vw - 1500px) / 2));
   --muelle: cubic-bezier(.2, 1.4, .4, 1);
   /* Variables del SDK (ventana de reserva, aviso de cookies, idiomas) */
   --r-bg: var(--charol);
@@ -66,6 +68,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--negro); -webkit-text-size-adjust: 100%; overflow-x: clip; scroll-padding-top: calc(var(--cab) + 10px); }
 body { margin: 0; -webkit-tap-highlight-color: transparent; background: var(--negro); color: var(--papel); font: 400 17px/1.55 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+@media (min-width: 1700px) { :root { --cab: 88px; } body { font-size: 18px; } }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 h1, h2, h3, h4 { margin: 0; line-height: 1.05; overflow-wrap: break-word; font-weight: 400; }
@@ -111,7 +114,7 @@ main, .pie { position: relative; z-index: 2; }
 /* Cabecera fija y siempre visible: marca, apartados y «Reservar» */
 .cab {
   position: fixed; inset: 0 0 auto; z-index: 40; height: calc(var(--cab) + env(safe-area-inset-top)); display: flex; align-items: center; gap: 28px;
-  padding: env(safe-area-inset-top) max(var(--lado), env(safe-area-inset-right)) 0 max(var(--lado), env(safe-area-inset-left)); transition: background .3s, box-shadow .3s;
+  padding: env(safe-area-inset-top) max(var(--borde), env(safe-area-inset-right)) 0 max(var(--borde), env(safe-area-inset-left)); transition: background .3s, box-shadow .3s;
 }
 .cab-fondo { background: rgba(11, 5, 7, .94); box-shadow: 0 1px 0 var(--linea); }
 .cab-marca { font: italic 400 26px/1 var(--serif); text-decoration: none; color: var(--papel); margin-right: auto; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -154,21 +157,21 @@ main, .pie { position: relative; z-index: 2; }
 .punto { width: 9px; height: 9px; border-radius: 50%; background: #9be3b0; flex: none; }
 .punto-off { background: var(--suave); }
 .pill-chica { min-height: 38px; padding: 0 16px; font-size: 14px; }
-.sec-t { font: 400 clamp(30px, 4vw, 46px)/1.1 var(--serif); letter-spacing: -.02em; margin: 0 0 16px; }
+.sec-t { font: 400 clamp(30px, 4vw, 64px)/1.1 var(--serif); letter-spacing: -.02em; margin: 0 0 16px; }
 .sec-cab { margin-bottom: 24px; }
 .sec-cab .sec-t { margin-bottom: 8px; }
 .sec-cab .nota { margin: 0; }
-main > section { width: min(1080px, calc(100% - 2 * var(--lado))); margin-inline: auto; }
+main > section { width: min(1500px, calc(100% - 2 * var(--lado))); margin-inline: auto; }
 main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
 
-.hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(24px, 5vw, 64px); align-items: center; padding: calc(var(--cab) + clamp(28px, 7vh, 80px)) 0 clamp(16px, 4vw, 40px); min-height: min(88svh, 760px); }
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(24px, 6vw, 110px); align-items: center; padding: calc(var(--cab) + clamp(28px, 7vh, 80px)) 0 clamp(16px, 4vw, 40px); min-height: min(88svh, 760px); }
 .hero-txt { min-width: 0; }
 .hoy { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 8px 14px; border: 1px solid var(--linea); border-radius: 999px; font-size: 14px; background: rgba(11, 5, 7, .5); }
-.hero-t { font: italic 300 clamp(48px, 8vw, 104px)/.98 var(--serif); letter-spacing: -.035em; margin: 0 0 14px; }
-.hero-frase { font: 300 clamp(20px, 2.4vw, 28px)/1.25 var(--serif); margin: 0 0 14px; }
+.hero-t { font: italic 300 clamp(48px, 8.5vw, 150px)/.98 var(--serif); letter-spacing: -.035em; margin: 0 0 14px; }
+.hero-frase { font: 300 clamp(20px, 2.4vw, 40px)/1.25 var(--serif); margin: 0 0 14px; }
 .hero-frase em { color: var(--rosa); }
-.hero-lead { max-width: 46ch; color: var(--suave); font-size: 17px; margin: 0 0 26px; }
-.hero-foto { margin: 0; border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 5; border: 1px solid var(--linea); }
+.hero-lead { max-width: 52ch; color: var(--suave); font-size: clamp(17px, 1.3vw, 21px); margin: 0 0 26px; }
+.hero-foto { margin: 0; border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 4.6; border: 1px solid var(--linea); }
 .hero-foto img { width: 100%; height: 100%; object-fit: cover; }
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; min-height: 0; padding-top: calc(var(--cab) + 20px); }
@@ -177,8 +180,8 @@ main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
 }
 
 /* Cómo reservar */
-.pasos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.pasos li { padding: 20px; border: 1px solid var(--linea); border-radius: 20px; background: rgba(20, 10, 13, .7); }
+.pasos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 2vw, 28px); }
+.pasos li { padding: clamp(20px, 2vw, 32px); border: 1px solid var(--linea); border-radius: 20px; background: rgba(20, 10, 13, .7); }
 .pasos li b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--rosa); color: var(--negro); font-weight: 700; margin-bottom: 12px; }
 .pasos h3 { font: 500 19px/1.2 var(--sans); margin: 0 0 6px; }
 .pasos p { margin: 0; color: var(--suave); font-size: 15px; }
@@ -208,8 +211,18 @@ main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
   .serv:has(.serv-foto) .serv-reservar { grid-column: 1 / -1; }
 }
 
+@media (min-width: 1100px) {
+  .cat { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 0 clamp(24px, 4vw, 70px); align-items: start; }
+  .cat-t { font-size: 14px; padding-top: 18px; }
+  .servs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(24px, 3vw, 56px); border-top: 0; }
+  .serv { border-top: 0; }
+  .servs .serv:nth-child(-n+2) { border-top: 1px solid var(--linea); }
+  .servs .serv:nth-child(odd):last-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1400px) { .servs .serv:nth-child(-n+2) { border-top: 1px solid var(--linea); } }
+
 /* Packs: tarjetas con su precio y su botón */
-.packs-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.packs-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: clamp(16px, 2vw, 28px); }
 .pack { display: flex; flex-direction: column; gap: 12px; padding: 24px; border: 1px solid var(--linea); border-radius: 24px; background: rgba(20, 10, 13, .78); }
 .pack h3 { font: 400 28px/1.1 var(--serif); }
 .pack-dias { margin: 0; font-size: 14px; color: var(--suave); }
@@ -226,8 +239,8 @@ main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
 .pack-precio { margin: 0; font: 600 26px var(--sans); }
 
 /* Nosotros */
-.nosotros { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(24px, 5vw, 64px); align-items: center; }
-.nosotros-txt p { font-size: 18px; color: var(--suave); max-width: 52ch; }
+.nosotros { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(24px, 6vw, 110px); align-items: center; }
+.nosotros-txt p { font-size: clamp(18px, 1.5vw, 24px); color: var(--suave); max-width: 52ch; }
 .nosotros-foto { margin: 0; border-radius: 24px; overflow: hidden; aspect-ratio: 4 / 3; border: 1px solid var(--linea); }
 .nosotros-foto img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
 @media (max-width: 760px) { .nosotros { grid-template-columns: 1fr; } }
@@ -235,7 +248,7 @@ main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
 /* Reservar y políticas */
 .cierre { text-align: left; }
 .cierre > p { max-width: 56ch; color: var(--suave); }
-.politicas { margin-top: 36px; max-width: 720px; }
+.politicas { margin-top: 36px; max-width: 860px; }
 .politicas h3 { font: 600 18px var(--sans); margin-bottom: 10px; }
 .politicas details { border-top: 1px solid var(--linea); }
 .politicas details:last-child { border-bottom: 1px solid var(--linea); }
@@ -261,7 +274,7 @@ main > section:not(.hero) { padding: clamp(40px, 7vw, 80px) 0 0; }
 }
 
 /* ---------- Pie ---------- */
-.pie { padding: clamp(48px, 8vw, 90px) var(--lado) 30px; background: linear-gradient(transparent, rgba(0, 0, 0, .8) 20%); margin-top: clamp(40px, 7vw, 80px); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 36px clamp(24px, 4vw, 60px); }
+.pie { padding: clamp(48px, 8vw, 90px) var(--borde) 30px; background: linear-gradient(transparent, rgba(0, 0, 0, .8) 20%); margin-top: clamp(40px, 7vw, 80px); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 36px clamp(24px, 4vw, 60px); }
 .pie-titulo { grid-column: 1 / -1; margin: 0; font: 300 clamp(30px, 4vw, 46px)/1.1 var(--serif); letter-spacing: -.02em; }
 .pie-bloque { min-width: 0; }
 .pie-bloque h2 { margin: 0 0 14px; font: 600 13px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--rosa); }
