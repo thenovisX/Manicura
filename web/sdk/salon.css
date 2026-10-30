@@ -36,7 +36,36 @@
 .bk-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
 .bk-step { margin: 0 0 4px; color: var(--r-muted); font-size: .85rem; font-weight: 600; letter-spacing: .02em; }
 .bk-h { font-family: var(--r-font-title); font-weight: 600; font-size: 1.7rem; line-height: 1.05; margin: 0; }
-.bk-sum { margin: 8px 0 0; color: var(--r-muted); font-size: .95rem; min-height: 1.4em; }
+.bk-steps { list-style: none; margin: -6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: .78rem; color: var(--r-muted); }
+.bk-steps li { border-top: 3px solid var(--r-line); padding-top: 6px; }
+.bk-steps li.is-done { border-color: color-mix(in srgb, var(--r-accent) 55%, transparent); }
+.bk-steps li.is-now { border-color: var(--r-accent); color: var(--r-text); font-weight: 600; }
+/* Resumen «Tu cita»: siempre a la vista */
+.bk-resumen { border: 1px solid var(--r-line); border-radius: var(--r-radius); background: var(--r-field); padding: 12px 14px; }
+.bk-resumen-t { margin: 0 0 6px; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--r-muted); }
+.bk-resumen dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
+.bk-resumen dl > div { min-width: 0; border-radius: 6px; }
+.bk-resumen dl > div:first-child { grid-column: 1 / -1; }
+.bk-resumen dt { font-size: .75rem; color: var(--r-muted); }
+.bk-resumen dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.bk-resumen dd.is-pend { font-weight: 400; color: var(--r-muted); font-style: italic; }
+.bk-resumen .is-go { cursor: pointer; }
+.bk-resumen .is-go dt::after { content: ' · ' attr(data-cambiar); text-decoration: underline; }
+.bk-resumen .is-go:hover dd, .bk-resumen .is-go:focus-visible dd { text-decoration: underline; }
+.bk-resumen .is-go:focus-visible { outline: 2px solid var(--r-accent); outline-offset: 2px; }
+.bk-resumen.is-final { border-color: var(--r-accent); border-width: 2px; }
+/* Mientras eliges (pasos 1 a 3) el resumen es una línea compacta; en «Revisar» se ve entero */
+.bk-resumen:not(.is-final) { padding: 10px 14px; }
+.bk-resumen:not(.is-final) dl { display: flex; flex-wrap: wrap; gap: 2px 0; }
+.bk-resumen:not(.is-final) dl > div:not(:first-child)::before { content: '·'; margin: 0 8px; color: var(--r-muted); }
+.bk-resumen:not(.is-final) dl > div:has(.is-pend):not(:first-child) { display: none; }
+.bk-resumen:not(.is-final) dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.bk-resumen:not(.is-final) dl > div { display: flex; }
+.bk-resumen:not(.is-final) dd { font-size: .95rem; }
+.bk-lead { margin: 0; font-weight: 600; }
+.bk-datos { margin: 0; display: grid; gap: 8px; }
+.bk-datos dt { font-size: .75rem; color: var(--r-muted); }
+.bk-datos dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .bk-close { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--r-line); background: none; color: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
 .bk-pane { display: grid; gap: 22px; min-width: 0; }
 .bk-pane > * { min-width: 0; }
@@ -79,15 +108,22 @@
   background: var(--r-field); color: inherit; font: inherit; font-weight: 400;
 }
 .bk textarea { resize: vertical; }
-/* Servicio que se reserva */
-.bk-svc select {
-  width: 100%; min-height: 48px; padding: 12px 40px 12px 14px; border-radius: calc(var(--r-radius) - 4px); border: 1px solid var(--r-line);
-  background: var(--r-field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23888' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 16px center;
-  color: inherit; font: inherit; font-weight: 400; appearance: none; cursor: pointer; text-overflow: ellipsis;
-}
-.bk-svc select option, .bk-svc select optgroup { color: #000; }
+/* Servicio que se reserva: lista con nombre, duración y precio */
+.bk-svcs { display: grid; gap: 6px; }
+.bk-svc-sec { margin: 10px 0 2px; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--r-muted); }
+.bk-svc-sec:first-child { margin-top: 0; }
+.bk-svc-op { position: relative; display: block !important; }
+.bk-svc-op input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.bk-svc-op > span { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 14px; border: 1px solid var(--r-line); border-radius: var(--r-radius); background: var(--r-field); color: var(--r-text); font-size: 1rem; }
+.bk-svc-op b { font-weight: 600; }
+.bk-svc-op small { grid-row: 2; color: var(--r-muted); font-weight: 400; font-size: .85rem; }
+.bk-svc-op em { grid-row: 1 / 3; grid-column: 2; align-self: center; font-style: normal; font-weight: 700; white-space: nowrap; }
+.bk-svc-op input:checked + span { border-color: var(--r-accent); box-shadow: inset 0 0 0 1px var(--r-accent); background: color-mix(in srgb, var(--r-accent) 14%, var(--r-field)); }
+.bk-svc-op input:checked + span b::before { content: '✓ '; color: var(--r-accent); }
+.bk-svc-op input:focus-visible + span { outline: 2px solid var(--r-accent); outline-offset: 2px; }
+.bk-svc-nose > span { border-style: dashed; }
 .bk fieldset .bk-help { margin-top: 10px; }
-.bk input:focus, .bk textarea:focus, .bk-svc select:focus { outline: none; border-color: var(--r-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--r-accent) 20%, transparent); }
+.bk input:focus, .bk textarea:focus { outline: none; border-color: var(--r-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--r-accent) 20%, transparent); }
 .bk-fields { display: grid; gap: 14px; }
 .bk-who { margin: 0; color: var(--r-muted); }
 .bk-who strong { color: var(--r-text); font-weight: 600; }

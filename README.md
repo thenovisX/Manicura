@@ -4,7 +4,7 @@
 
 Base reutilizable para hacer la web de un salón de manicura y uñas. Para cada cliente solo hay que hacer el diseño, en `web/tema/`; todo lo demás ya funciona:
 
-- **Citas online** en 3 pasos con confirmación por WhatsApp: el cliente elige el servicio (o «Aún no lo sé»), cuántas personas vienen, el día y la hora. Al pulsar «Reservar cita» se elige entre reservar online o llamar; llamar se desactiva con un aviso cuando el salón está cerrado.
+- **Citas online** en 4 pasos con confirmación por WhatsApp: servicio (con duración y precio; o «Aún no lo sé») y personas, día y hora, datos, y una pantalla de revisión antes de enviar. Un resumen «Tu cita» está siempre a la vista. Al pulsar «Reservar cita» se elige entre reservar online o llamar; llamar se desactiva con un aviso cuando el salón está cerrado.
 - **Huecos según la duración de cada servicio**: una manicura rusa de 75 min a las 10:00 ocupa un puesto hasta las 11:15. El salón indica cuántos **puestos** trabaja a la vez (por defecto 2) y la duración por defecto cuando el cliente no elige servicio. El servicio tiene que terminar antes de que cierre el turno. Días cerrados y antelación mínima.
 - **Cuentas de clientes** con activación por email, recuperación de contraseña por email, historial, cancelación gratis, descarga y borrado de datos. En la app, el administrador ve todas las cuentas (Ajustes → Clientes con cuenta).
 - **Borrar mis datos sin cuenta**: el cliente escribe su email o teléfono en la web (`borrar-datos.php` y la página legal) y confirma con un enlace (por email, o por WhatsApp desde la app); se borra la cuenta, se cancelan sus citas futuras y se anonimizan las demás.
@@ -20,7 +20,7 @@ Base reutilizable para hacer la web de un salón de manicura y uñas. Para cada 
 - **SEO** (descripción, datos estructurados `NailSalon` con rango de precios, sitemap, Search Console) e **instalable como app** (PWA).
 - **Seguridad**: datos personales cifrados, borrado a las 24 h y bloqueo por intentos fallidos. Ver [SEGURIDAD.md](SEGURIDAD.md).
 
-Incluye un tema completo («Laca»: fondo de laca líquida en WebGL, scroll con inercia, escenas fijas y cursor magnético, en negro charol, granate y rosa) para que la web funcione desde el primer momento. Su JavaScript se compila desde `web/tema/fuente/` (ver su `LEEME.md`). Las fotos del tema (`web/tema/assets/img/`) son dibujos de ejemplo: cámbialas por fotos del salón y de sus trabajos.
+Incluye un tema completo («Laca»: portada clara con servicios, precios y «Reservar» a la vista sobre un fondo de laca muy lento en WebGL, en negro charol, granate y rosa) para que la web funcione desde el primer momento. Su JavaScript se compila desde `web/tema/fuente/` (ver su `LEEME.md`). Las fotos del tema (`web/tema/assets/img/`) son dibujos de ejemplo: cámbialas por fotos del salón y de sus trabajos.
 
 Está hecha a partir del backend para restaurantes, con la misma estructura: la carta pasa a ser **servicios** (con duración), los menús pasan a ser **packs**, el aforo de mesas pasa a ser **puestos** y desaparecen los alérgenos y el horario de cocina.
 
