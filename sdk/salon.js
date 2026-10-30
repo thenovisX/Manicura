@@ -2,7 +2,7 @@
  * SDK de la web del salón. Lo carga body_end() en todas las páginas. Hace tres cosas:
  *
  * 1. Ventana de reserva: cualquier elemento con data-book la abre (no hace falta nada más). Con
- *    data-book-service="ID" se abre con ese servicio ya elegido.
+ *    data-book-service="ID" se abre con ese servicio ya elegido y con data-book-notes="texto" con las notas escritas.
  * 2. Cuenta del cliente: formularios con data-api="c_login|c_register|c_profile|c_delete|c_forgot|c_reset", botones
  *    data-cancel="ID", data-confirm-res="ID", data-logout y data-resend. Ver TEMA.md.
  * 3. Instalar como app (data-install, data-install-ios, data-install-help, data-install-done).
@@ -72,9 +72,10 @@
     try { document.dispatchEvent(new CustomEvent('salon:' + name, { detail: detail })); } catch (e) { /* navegador antiguo */ }
   }
 
-  /* ---------- Reserva en 3 pasos ---------- */
+  /* ---------- Reserva en 4 pasos: servicio, día y hora, tus datos, revisar ---------- */
   var dlg = $('#bk');
-  var B = { people: 1, service: 0, date: R.today, time: '', slots: [] };
+  var B = { people: 1, service: 0, date: R.today, time: '', slots: [], minutes: 0, pane: 1 };
+  var TITULOS = ['¿Cómo quieres reservar?', 'Elige el servicio', 'Elige día y hora', 'Tus datos', 'Revisa tu cita', 'Petición enviada'];
 
   function isClosed(day) {
     if ((R.closed || []).indexOf(day) !== -1) return true;
@@ -82,26 +83,63 @@
     return !((R.hours || {})[wd] || []).length;
   }
 
+  function setRow(id, txt, pend) {
+    var dd = $('#' + id);
+    dd.textContent = txt || T('Sin elegir');
+    dd.classList.toggle('is-pend', !txt || !!pend);
+  }
+
+  /** Resumen «Tu cita»: lo que se va a reservar, siempre a la vista mientras eliges. */
   function summary() {
-    if (B.pane === 0) { $('#bk-sum').textContent = ''; return; }
-    var parts = [];
-    if (SVC[B.service]) parts.push(SVC[B.service].name);
-    if (B.people > 1 || !parts.length) parts.push(B.people + ' ' + (B.people === 1 ? T('persona') : T('personas')));
-    if (B.date) parts.push(longDay(B.date));
-    if (B.time) parts.push(B.time);
-    $('#bk-sum').textContent = parts.join(' · ');
+    var box = $('#bk-resumen');
+    box.hidden = B.pane === 0;
+    if (B.pane === 0) return;
+    var s = SVC[B.service], noSe = $('#bk-svcs input[value="0"]:checked', dlg);
+    setRow('bk-r-svc', s ? s.name : noSe ? T('Aún no lo sé (lo cuento en las notas)') : '');
+    var min = B.minutes || (s && s.duration) || 0;
+    $('#bk-r-dura-f').hidden = !min;
+    setRow('bk-r-dura', min ? T('unos %s', minText(min)) : '');
+    $('#bk-r-precio-f').hidden = !(s && s.price);
+    setRow('bk-r-precio', s && s.price ? s.price + (B.people > 1 ? ' ' + T('por persona') : '') : '');
+    var pf = $('#bk-r-people-f');
+    pf.hidden = B.people < 2 && !$('#bk-people', dlg);
+    setRow('bk-r-people', B.people + ' ' + (B.people === 1 ? T('persona') : T('personas')));
+    setRow('bk-r-dia', B.date ? longDay(B.date) : '');
+    setRow('bk-r-hora', B.time || '');
+    $$('#bk-resumen [data-go]', dlg).forEach(function (r) {
+      var go = +r.dataset.go < B.pane && B.pane < 5;
+      r.classList.toggle('is-go', go);
+      if (go) { r.tabIndex = 0; r.setAttribute('role', 'button'); } else { r.removeAttribute('tabindex'); r.removeAttribute('role'); }
+    });
   }
 
   function showPane(n) {
     B.pane = n;
     $$('.bk-pane', dlg).forEach(function (p) { p.hidden = p.dataset.pane !== String(n); });
-    $('#bk-step').textContent = n === 0 ? '' : n <= 3 ? T('Paso %d de 3', n) : T('Hecho');
-    $('#bk-title').textContent = T(['¿Cómo quieres reservar?', 'Reservar cita', 'Elige la hora', 'Tus datos', 'Petición enviada'][n]);
+    $('#bk-step').textContent = n === 0 ? '' : n <= 4 ? T('Paso %d de 4', n) : T('Hecho');
+    $('#bk-title').textContent = T(TITULOS[n]);
+    var steps = $('#bk-steps');
+    steps.hidden = n === 0 || n === 5;
+    $$('li', steps).forEach(function (li) { var k = +li.dataset.s; li.className = k < n ? 'is-done' : k === n ? 'is-now' : ''; });
+    $('#bk-resumen').classList.toggle('is-final', n >= 4);
     summary();
     if (n === 0) updateCall();
-    var focusable = $('.bk-pane:not([hidden]) button, .bk-pane:not([hidden]) input', dlg);
-    if (n > 1 && focusable) focusable.focus({ preventScroll: true });
+    if (n === 4) fillReview();
+    dlg.scrollTop = 0;
+    var focusable = $('.bk-pane:not([hidden]) input:not([type=radio]), .bk-pane:not([hidden]) .bk-btn-main', dlg);
+    if (n > 1 && focusable && !matchMedia('(pointer: coarse)').matches) focusable.focus({ preventScroll: true });
     if (n === 2) loadSlots();
+  }
+
+  /** Paso 4: los datos de contacto tal y como se van a enviar. */
+  function fillReview() {
+    var f = $('#bk-form'), em = f.email.value.trim(), no = f.notes.value.trim();
+    $('#bk-d-name').textContent = f.name.value.trim();
+    $('#bk-d-phone').textContent = f.phone.value.trim();
+    $('#bk-d-email-f').hidden = !em;
+    $('#bk-d-email').textContent = em;
+    $('#bk-d-notes-f').hidden = !no;
+    $('#bk-d-notes').textContent = no;
   }
 
   /* ---------- ¿Está abierto ahora? (hora del salón, no la del móvil) ---------- */
@@ -192,22 +230,23 @@
     } else {
       var morning = B.slots.filter(function (s) { return s.time < '14:00'; });
       var afternoon = B.slots.filter(function (s) { return s.time >= '14:00'; });
-      box.innerHTML = (B.minutes ? '<p class="bk-msg">' + T('Tu cita dura unos %s.', minText(B.minutes)) + '</p>' : '')
-        + (morning.length ? '<h3>' + T('Mañana') + '</h3>' + slotButtons(morning) : '') + (afternoon.length ? '<h3>' + T('Tarde') + '</h3>' + slotButtons(afternoon) : '');
+      box.innerHTML = (morning.length ? '<h3>' + T('Mañana') + '</h3>' + slotButtons(morning) : '') + (afternoon.length ? '<h3>' + T('Tarde') + '</h3>' + slotButtons(afternoon) : '');
     }
     $('#bk-to3').disabled = !B.time;
   }
 
   function loadSlots() {
-    var box = $('#bk-slots');
+    var box = $('#bk-slots'), day = B.date;
     box.innerHTML = '<p class="bk-msg">' + T('Buscando horas libres…') + '</p>';
     $('#bk-to3').disabled = true;
-    api('slots&date=' + encodeURIComponent(B.date) + (B.service ? '&service=' + B.service : '')).then(function (d) {
+    api('slots&date=' + encodeURIComponent(day) + (B.service ? '&service=' + B.service : '')).then(function (d) {
+      if (day !== B.date) return; // ya han elegido otro día
       B.slots = d.slots;
       B.minutes = d.minutes;
       B.reason = d.open ? '' : d.reason + '.';
       if (B.time && !B.slots.some(function (s) { return s.time === B.time && s.left >= B.people; })) B.time = '';
       renderSlots();
+      summary();
     }).catch(function (e) {
       box.innerHTML = '<p class="bk-msg">' + esc(e.message) + '</p>';
     });
@@ -218,20 +257,27 @@
     var f = $('#bk-form');
     f.notes.value = '';
     f.privacy.checked = false;
-    $('#bk-err').textContent = '';
+    $$('.bk-err', dlg).forEach(function (e) { e.textContent = ''; });
     $('#bk-send').disabled = false;
     $('#bk-send').textContent = T('Enviar petición');
   }
 
+  function setService(id) {
+    var r = $('#bk-svcs input[value="' + id + '"]', dlg);
+    if (r) r.checked = true;
+    B.service = SVC[id] ? id : 0;
+    B.minutes = 0;
+    B.time = '';
+  }
+
   function openBooking() {
     if (!dlg) return;
-    if (!$('.bk-pane[data-pane="4"]', dlg).hidden) resetBooking();
-    var sel = $('#bk-service');
-    if (sel) {
-      // data-book-service="ID" en el botón deja el servicio elegido (p. ej. «Reservar» junto a cada servicio)
-      if (openBooking.service && SVC[openBooking.service]) sel.value = String(openBooking.service);
-      B.service = +sel.value || 0;
-    }
+    if (B.pane === 5) resetBooking();
+    // data-book-service="ID" en el botón deja el servicio elegido (p. ej. «Reservar» junto a cada servicio) y
+    // data-book-notes="texto" rellena las notas (p. ej. «Pack novia»: el servicio queda en «Aún no lo sé»)
+    if (openBooking.service && SVC[openBooking.service]) setService(openBooking.service);
+    else if (openBooking.notes) setService(0);
+    if (openBooking.notes) $('#bk-form').notes.value = openBooking.notes;
     renderDays();
     if (isClosed(B.date)) {
       for (var i = 0; i < 14; i++) { var d = addDays(R.today, i); if (!isClosed(d)) { pickDate(d); break; } }
@@ -244,6 +290,20 @@
     emit('reserva-abierta', {});
   }
 
+  /** Comprueba el paso antes de pasar al siguiente. Devuelve el texto del error o ''. */
+  function checkPane(n) {
+    var f = $('#bk-form');
+    if (n === 1 && $('#bk-svcs', dlg) && !$('#bk-svcs input:checked', dlg)) return T('Elige un servicio (o «Aún no lo sé»).');
+    if (n === 3 && (!R.customer || !$('#bk-fields').hidden || !f.phone.value.trim())) {
+      var name = f.name.value.trim(), phone = f.phone.value.trim();
+      if (!name || !phone) $('#bk-fields').hidden = false;
+      if (!name && !phone) return T('Faltan tu nombre y un teléfono móvil.');
+      if (!name) return T('Falta tu nombre.');
+      if (!phone) return T('Falta un teléfono móvil.');
+    }
+    return '';
+  }
+
   if (dlg) {
     document.addEventListener('click', function (e) {
       var b = e.target.closest('[data-book]');
@@ -251,13 +311,14 @@
       e.preventDefault();
       emit('antes-de-reservar', {});
       openBooking.service = +b.dataset.bookService || 0;
+      openBooking.notes = b.dataset.bookNotes || '';
       openBooking();
     });
     dlg.addEventListener('click', function (e) {
       if (e.target === dlg || e.target.closest('[data-close]')) { dlg.close(); return; }
       if (e.target.closest('.bk-opt.is-off')) { e.preventDefault(); return; }
       var day = e.target.closest('.bk-day');
-      if (day && !day.disabled) return pickDate(day.dataset.day);
+      if (day && !day.disabled) { pickDate(day.dataset.day); loadSlots(); return; }
       var slot = e.target.closest('.bk-slot');
       if (slot && !slot.disabled) {
         B.time = slot.dataset.time;
@@ -266,13 +327,24 @@
         summary();
         return;
       }
-      var nx = e.target.closest('[data-next]');
-      if (nx && !nx.disabled) showPane(+nx.dataset.next);
+      // Tocar una fila del resumen lleva al paso donde se cambia
+      var go = e.target.closest('#bk-resumen .is-go');
+      if (go) { showPane(+go.dataset.go); return; }
+      var to4 = e.target.closest('#bk-to4');
+      var nx = to4 || e.target.closest('[data-next]');
+      if (!nx || nx.disabled) return;
+      var to = to4 ? 4 : +nx.dataset.next;
+      if (to > B.pane) {
+        var msg = checkPane(B.pane), box = $('#bk-err' + B.pane);
+        if (box) box.textContent = msg;
+        if (msg) return;
+      }
+      showPane(to);
     });
     dlg.addEventListener('change', function (e) {
-      if (e.target.id === 'bk-service') {
-        B.service = +e.target.value || 0;
-        B.time = '';
+      if (e.target.name === 'service') {
+        setService(+e.target.value || 0);
+        $('#bk-err1').textContent = '';
         summary();
       } else if (e.target.name === 'people') {
         B.people = +e.target.value;
@@ -287,7 +359,12 @@
       } else if (e.target.id === 'bk-date' && e.target.value) {
         if (isClosed(e.target.value)) { toast(T('Ese día el salón está cerrado')); e.target.value = B.date; return; }
         pickDate(e.target.value);
+        loadSlots();
       }
+    });
+    dlg.addEventListener('keydown', function (e) {
+      var go = e.target.closest && e.target.closest('#bk-resumen .is-go');
+      if (go && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showPane(+go.dataset.go); }
     });
     var editWho = $('#bk-edit-who');
     if (editWho) editWho.addEventListener('click', function () { $('#bk-fields').hidden = false; editWho.parentNode.hidden = true; });
@@ -301,25 +378,22 @@
         notes: f.notes.value.trim(), website: f.website.value, privacy: f.privacy.checked ? 1 : 0
       };
       err.textContent = '';
-      if (!data.phone && R.customer) { $('#bk-fields').hidden = false; }
-      if (!R.customer || !$('#bk-fields').hidden) {
-        if (!data.name && !data.phone) { err.textContent = T('Faltan tu nombre y un teléfono móvil.'); $('#bk-fields').hidden = false; return; }
-        if (!data.name) { err.textContent = T('Falta tu nombre.'); $('#bk-fields').hidden = false; return; }
-        if (!data.phone) { err.textContent = T('Falta un teléfono móvil.'); $('#bk-fields').hidden = false; return; }
-      }
+      if (!data.time) { showPane(2); return; }
+      var falta = checkPane(3);
+      if (falta) { showPane(3); $('#bk-err3').textContent = falta; return; }
       if (!data.privacy) { err.textContent = T('Marca la casilla para aceptar las políticas.'); return; }
       var btn = this;
       btn.disabled = true;
       btn.textContent = T('Enviando…');
       api('reserve', data).then(function (r) {
-        $('#bk-done-t').textContent = T('Petición realizada');
+        $('#bk-done-t').textContent = T('Petición enviada');
         $('#bk-done-msg').textContent = r.message;
         var more = $('#bk-done-more');
         var wait = T('Esperando confirmación. Mientras no abras el enlace del WhatsApp y pulses «Confirmar mi reserva», la reserva queda pendiente.');
         if (r.linked) more.innerHTML = T('Esperando confirmación. La verás en <a href="cuenta.php">tu cuenta</a>, donde también podrás cancelarla.');
         else if (r.email) more.textContent = wait + ' ' + T('Si creas una cuenta con el mismo email, también la verás allí.');
         else more.textContent = wait + ' ' + T('Como no has puesto email, esta reserva no aparecerá en ninguna cuenta.');
-        showPane(4);
+        showPane(5);
         emit('reserva', r);
       }).catch(function (e) {
         err.textContent = e.message;
