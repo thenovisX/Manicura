@@ -2,19 +2,20 @@
 declare(strict_types=1);
 /*
  * CONFIGURACIÓN DEL TEMA. Solo constantes (lo leen también la API y el panel).
- * Este es el tema «Base»: un diseño sencillo para empezar. Para un proyecto nuevo, cambia lo que hay
+ * Este es el tema «Laca»: laca líquida en WebGL, scroll con inercia y escenas fijas. Para un proyecto nuevo, cambia lo que hay
  * en web/tema/ y nada más. El contrato completo está en TEMA.md, en la raíz del repositorio.
+ * El JavaScript se compila desde web/tema/fuente/ (ver su LEEME.md).
  */
 
-const TEMA_NOMBRE = 'Base';
+const TEMA_NOMBRE = 'Laca';
 /** Súbela cuando cambies el CSS o el JS del tema, para que los navegadores descarguen la versión nueva. */
-const TEMA_VERSION = '1';
+const TEMA_VERSION = '3';
 
 /** Colores para el icono de la app, la barra del navegador y el manifest. */
 const TEMA_COLORES = [
-    'fondo'  => '#F8F1EF',   // fondo del icono y color de la barra del navegador en el móvil
-    'texto'  => '#2D2228',   // letra del icono
-    'acento' => '#B0466B',   // destello del icono
+    'fondo'  => '#0B0507',   // fondo del icono y color de la barra del navegador en el móvil
+    'texto'  => '#F6ECE8',   // letra del icono
+    'acento' => '#F2A7B8',   // destello del icono
 ];
 
 /**
