@@ -1,0 +1,17 @@
+{
+  "appId": "com.manicura.gestion",
+  "appName": "Reservas",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#B0466B"
+    },
+    "SplashScreen": {
+      "backgroundColor": "#2D2228",
+      "launchShowDuration": 600
+    }
+  }
+}
