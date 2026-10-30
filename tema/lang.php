@@ -1,0 +1,49 @@
+<?php
+/*
+ * Traducciones de los textos propios de este tema (los que no están ya en lib/lang/textos.php).
+ * 'dict': 'texto en español' => ['en' => …, 'pt' => …, 'gl' => …]. El texto en español es la clave: en el tema se escribe
+ * t('texto en español') y, si falta aquí, se muestra en español. Admite %s y %d (t('Hola, %s', $nombre)).
+ * 'js': textos que usa el JavaScript del tema con Salon.t('texto'); se mandan traducidos al navegador.
+ */
+return [
+    'dict' => [
+        'Reservar cita' => ['en' => 'Book an appointment', 'pt' => 'Fazer marcação', 'gl' => 'Reservar cita'],
+        'Servicios y precios' => ['en' => 'Services and prices', 'pt' => 'Serviços e preços', 'gl' => 'Servizos e prezos'],
+        'Ver packs' => ['en' => 'See packs', 'pt' => 'Ver packs', 'gl' => 'Ver packs'],
+        'Escribe aquí la presentación del salón desde la app: Ajustes → Salón.' => ['en' => 'Write the salon’s introduction here from the app: Settings → Salon.', 'pt' => 'Escreva aqui a apresentação do salão a partir da app: Definições → Salão.', 'gl' => 'Escribe aquí a presentación do salón desde a app: Axustes → Salón.'],
+        'Manos, pies y uñas a tu gusto' => ['en' => 'Hands, feet and nails just the way you like', 'pt' => 'Mãos, pés e unhas ao seu gosto', 'gl' => 'Mans, pés e uñas ao teu gusto'],
+        'Los servicios aparecerán aquí en cuanto se añadan desde la app.' => ['en' => 'Services will appear here as soon as they’re added from the app.', 'pt' => 'Os serviços aparecerão aqui assim que forem adicionados na app.', 'gl' => 'Os servizos aparecerán aquí en canto se engadan desde a app.'],
+        'Secciones de servicios' => ['en' => 'Service sections', 'pt' => 'Secções de serviços', 'gl' => 'Seccións de servizos'],
+        'Lo más pedido' => ['en' => 'Most popular', 'pt' => 'O mais pedido', 'gl' => 'O máis pedido'],
+        'La duración es aproximada. Si tienes alergia a algún producto, dínoslo al reservar.' => ['en' => 'Times are approximate. If you’re allergic to any product, let us know when you book.', 'pt' => 'A duração é aproximada. Se tiver alergia a algum produto, diga-nos ao reservar.', 'gl' => 'A duración é aproximada. Se tes alerxia a algún produto, dínolo ao reservar.'],
+        'Packs y bonos' => ['en' => 'Packs and vouchers', 'pt' => 'Packs e vales', 'gl' => 'Packs e bonos'],
+        'Precio cerrado, todo incluido' => ['en' => 'Fixed price, everything included', 'pt' => 'Preço fechado, tudo incluído', 'gl' => 'Prezo pechado, todo incluído'],
+        'Para reservar un pack, elige «Aún no lo sé» en la reserva y dinos en las notas cuál quieres.' => ['en' => 'To book a pack, choose “Not sure yet” when booking and tell us in the notes which one you want.', 'pt' => 'Para reservar um pack, escolha «Ainda não sei» na reserva e diga-nos nas notas qual quer.', 'gl' => 'Para reservar un pack, escolle «Aínda non o sei» na reserva e dinos nas notas cal queres.'],
+        'Reserva tu cita en un minuto' => ['en' => 'Book your appointment in a minute', 'pt' => 'Faça a sua marcação num minuto', 'gl' => 'Reserva a túa cita nun minuto'],
+        'Elige el servicio, el día y la hora. Te enviaremos un WhatsApp para confirmar la reserva. Cancelar es siempre gratis.' => ['en' => 'Choose the service, the day and the time. We’ll send you a WhatsApp to confirm the booking. Cancelling is always free.', 'pt' => 'Escolha o serviço, o dia e a hora. Enviaremos um WhatsApp para confirmar a reserva. Cancelar é sempre grátis.', 'gl' => 'Escolle o servizo, o día e a hora. Enviarémosche un WhatsApp para confirmar a reserva. Cancelar é sempre de balde.'],
+        'Guardamos tu cita %d minutos desde la hora reservada.' => ['en' => 'We hold your appointment for %d minutes after the booked time.', 'pt' => 'Guardamos a sua marcação %d minutos a partir da hora reservada.', 'gl' => 'Gardamos a túa cita %d minutos desde a hora reservada.'],
+        'Instala la web como una app para reservar y ver los servicios más rápido.' => ['en' => 'Install the website as an app to book and see the services faster.', 'pt' => 'Instale o site como uma app para reservar e ver os serviços mais depressa.', 'gl' => 'Instala a web como unha app para reservar e ver os servizos máis rápido.'],
+        'Petición enviada: esperando al salón' => ['en' => 'Request sent: waiting for the salon', 'pt' => 'Pedido enviado: à espera do salão', 'gl' => 'Petición enviada: agardando polo salón'],
+        'No tienes reservas pendientes. <a href="#reservar" data-book>Reserva una cita</a>.' => ['en' => 'You have no upcoming bookings. <a href="#reservar" data-book>Book an appointment</a>.', 'pt' => 'Não tem reservas pendentes. <a href="#reservar" data-book>Faça uma marcação</a>.', 'gl' => 'Non tes reservas pendentes. <a href="#reservar" data-book>Reserva unha cita</a>.'],
+        'Servicios' => ['en' => 'Services', 'pt' => 'Serviços', 'gl' => 'Servizos'],
+        'Packs' => ['en' => 'Packs', 'pt' => 'Packs', 'gl' => 'Packs'],
+        'Gotas de esmalte en tonos rosa' => ['en' => 'Drops of nail polish in shades of pink', 'pt' => 'Gotas de verniz em tons de rosa', 'gl' => 'Pingas de esmalte en tons rosa'],
+        'El salón' => ['en' => 'The salon', 'pt' => 'O salão', 'gl' => 'O salón'],
+        'Uñas recién hechas en el salón' => ['en' => 'Freshly done nails at the salon', 'pt' => 'Unhas acabadas de fazer no salão', 'gl' => 'Uñas recén feitas no salón'],
+        'Trabajos' => ['en' => 'Our work', 'pt' => 'Trabalhos', 'gl' => 'Traballos'],
+        'Hoy cerrado' => ['en' => 'Closed today', 'pt' => 'Hoje fechado', 'gl' => 'Hoxe pechado'],
+        'Información' => ['en' => 'Information', 'pt' => 'Informações', 'gl' => 'Información'],
+        'En tu móvil' => ['en' => 'On your phone', 'pt' => 'No seu telemóvel', 'gl' => 'No teu móbil'],
+        'Ten %s a un toque' => ['en' => 'Have %s one tap away', 'pt' => 'Tenha %s à distância de um toque', 'gl' => 'Ten %s a un toque'],
+        'En Android o en el ordenador, abre el menú del navegador y elige «Instalar».' => ['en' => 'On Android or on a computer, open the browser menu and choose “Install”.', 'pt' => 'No Android ou no computador, abra o menu do navegador e escolha «Instalar».', 'gl' => 'En Android ou no ordenador, abre o menú do navegador e escolle «Instalar».'],
+        'En iPhone: pulsa Compartir y luego «Añadir a pantalla de inicio».' => ['en' => 'On iPhone: tap Share and then “Add to Home Screen”.', 'pt' => 'No iPhone: toque em Partilhar e depois em «Adicionar ao ecrã principal».', 'gl' => 'En iPhone: preme Compartir e logo «Engadir á pantalla de inicio».'],
+        'Ya la tienes instalada.' => ['en' => 'You already have it installed.', 'pt' => 'Já a tem instalada.', 'gl' => 'Xa a tes instalada.'],
+        'Apartados' => ['en' => 'Sections', 'pt' => 'Secções', 'gl' => 'Apartados'],
+        'Reserva sin escribir tus datos cada vez, mira tus próximas reservas y cancélalas tú mismo cuando quieras, sin coste.' => ['en' => 'Book without typing your details every time, see your upcoming bookings and cancel them yourself whenever you like, at no cost.', 'pt' => 'Reserve sem escrever os seus dados de cada vez, veja as suas próximas reservas e cancele-as quando quiser, sem custos.', 'gl' => 'Reserva sen escribir os teus datos cada vez, mira as túas próximas reservas e cancélaas ti mesmo cando queiras, sen custo.'],
+        'opcional, para avisarte si hay algún cambio' => ['en' => 'optional, so we can let you know of any change', 'pt' => 'opcional, para o avisarmos de alguma alteração', 'gl' => 'opcional, para avisarte se hai algún cambio'],
+        'Visítanos' => ['en' => 'Visit us', 'pt' => 'Visite-nos', 'gl' => 'Visítanos'],
+        '¿Algún dato está mal? No la confirmes: <a href="./#reservar" data-book>haz una reserva nueva</a> con los datos correctos.' => ['en' => 'Is any detail wrong? Do not confirm it: <a href="./#reservar" data-book>make a new booking</a> with the right details.', 'pt' => 'Algum dado está errado? Não a confirme: <a href="./#reservar" data-book>faça uma nova reserva</a> com os dados corretos.', 'gl' => 'Hai algún dato mal? Non a confirmes: <a href="./#reservar" data-book>fai unha reserva nova</a> cos datos correctos.'],
+        '¿Algún cambio? Llámanos al %s.' => ['en' => 'Any changes? Call us on %s.', 'pt' => 'Alguma alteração? Ligue-nos para o %s.', 'gl' => 'Algún cambio? Chámanos ao %s.'],
+    ],
+    'js' => [],
+];
