@@ -127,11 +127,13 @@ Pon también `<?= $cancelar_form('Cancelar la reserva', 'mi-clase') ?>`: deja al
 
 ## Reservar: `data-book`
 
-Cualquier elemento con `data-book` abre la ventana de reserva, por ejemplo `<a href="#reservar" data-book>Reservar cita</a>`. No hace falta nada más. Con `data-book-service="ID"` la ventana se abre con ese servicio ya elegido, y con `data-book-notes="texto"` con las notas escritas (útil para un pack: el servicio queda en «Aún no lo sé»). La ventana tiene 4 pasos (servicio, día y hora, tus datos, revisar y enviar) y un resumen «Tu cita» siempre visible con servicio, duración, precio, personas, día y hora.
+Cualquier elemento con `data-book` abre la ventana de reserva, por ejemplo `<a href="#reservar" data-book>Reservar cita</a>`. No hace falta nada más. Con `data-book-service="ID"` la ventana se abre con ese servicio ya elegido, y con `data-book-notes="texto"` con las notas escritas (útil para un pack: el servicio queda en «Aún no lo sé»). La ventana es una sola pantalla pensada para reservar con tres toques: el servicio (o ya viene elegido con `data-book-service`), la hora y «Reservar». Abajo lleva siempre una barra con lo que se reserva (día, hora, servicio y precio) y el botón. Por eso conviene que cada servicio del tema tenga su propio botón con `data-book-service`.
 
-La ventana pregunta qué servicio quiere (por secciones, con precio y duración, o «Aún no lo sé»), cuántas personas vienen (hasta `max_people`; cada persona ocupa un puesto), el día y la hora. Solo ofrece las horas en las que el servicio cabe entero antes del cierre del turno y hay puestos libres durante toda la cita. Las horas salen agrupadas en «Mañana» y «Tarde».
+Al abrirse con un servicio ya elegido, la ventana busca sola el primer día con huecos libres y enseña solo las horas libres (las que caben enteras antes del cierre del turno y con puestos libres durante toda la cita). Al tocar una hora aparece «¿A nombre de quién?»: nombre y móvil, nada más. El número de personas (hasta `max_people`), la nota y el email van plegados como opcionales.
 
-Si el salón tiene teléfono, la ventana empieza preguntando **«¿Cómo quieres reservar?»**: reservar online o llamar. «Llamar» se desactiva y avisa («Ahora estamos cerrados. Podrás llamarnos hoy a las 20:00») cuando la hora del salón queda fuera de su horario de apertura o es un día cerrado. Sin teléfono, la ventana va directa a la reserva online.
+Si el cliente ya reservó desde ese dispositivo (y dejó marcada «Recordar mis datos»), o tiene sesión con nombre y teléfono, sus datos salen puestos («Lucía · 600 123 123 · No soy yo») y no tiene que escribir nada. Se guardan en el almacenamiento local del navegador con la clave `salon_contacto` (está en la tabla de cookies de `legal.php`). Encima del botón se avisa de que al pulsar «Reservar» se aceptan las políticas; no hay casilla que marcar.
+
+Si el salón tiene teléfono o WhatsApp, abajo sale «¿Prefieres llamar o escribir?». «Llamar» se oculta y avisa («Ahora estamos cerrados. Podrás llamarnos hoy a las 16:00») cuando la hora del salón queda fuera de su horario.
 
 Para que la ventana y el aviso de cookies combinen con tu diseño, define estas variables en tu CSS:
 

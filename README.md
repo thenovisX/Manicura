@@ -4,7 +4,7 @@
 
 Base reutilizable para hacer la web de un salón de manicura y uñas. Para cada cliente solo hay que hacer el diseño, en `web/tema/`; todo lo demás ya funciona:
 
-- **Citas online** en 4 pasos con confirmación por WhatsApp: servicio (con duración y precio; o «Aún no lo sé») y personas, día y hora, datos, y una pantalla de revisión antes de enviar. Un resumen «Tu cita» está siempre a la vista. Al pulsar «Reservar cita» se elige entre reservar online o llamar; llamar se desactiva con un aviso cuando el salón está cerrado.
+- **Citas online con tres toques** y confirmación por WhatsApp: se toca el servicio en la web, se toca una hora libre y «Reservar». Solo se piden nombre y móvil, y el navegador los recuerda para la próxima vez. Personas, nota y email son opcionales y van plegados. Abajo, siempre a la vista, lo que se reserva y el botón; también «Llamar» (oculto con aviso cuando el salón está cerrado) y WhatsApp.
 - **Huecos según la duración de cada servicio**: una manicura rusa de 75 min a las 10:00 ocupa un puesto hasta las 11:15. El salón indica cuántos **puestos** trabaja a la vez (por defecto 2) y la duración por defecto cuando el cliente no elige servicio. El servicio tiene que terminar antes de que cierre el turno. Días cerrados y antelación mínima.
 - **Cuentas de clientes** con activación por email, recuperación de contraseña por email, historial, cancelación gratis, descarga y borrado de datos. En la app, el administrador ve todas las cuentas (Ajustes → Clientes con cuenta).
 - **Borrar mis datos sin cuenta**: el cliente escribe su email o teléfono en la web (`borrar-datos.php` y la página legal) y confirma con un enlace (por email, o por WhatsApp desde la app); se borra la cuenta, se cancelan sus citas futuras y se anonimizan las demás.
