@@ -1,6 +1,6 @@
 /* Service worker de la web pública: permite instalarla como app y abrirla sin conexión. */
-const CACHE = 'web-v5';
-const SHELL = ['./', 'sdk/salon.css?v=5', 'sdk/salon.js?v=5', 'sdk/consent.js?v=5', 'icon.php?s=192', 'manifest.php'];
+const CACHE = 'web-v6';
+const SHELL = ['./', 'sdk/salon.css?v=6', 'sdk/salon.js?v=6', 'sdk/consent.js?v=6', 'icon.php?s=192', 'manifest.php'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

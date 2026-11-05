@@ -49,6 +49,7 @@
       <tr><td>cookie_consent</td><td>Lembrar a sua escolha sobre os cookies (necessário). Passado esse prazo voltamos a perguntar.</td><td>Este site</td><td>13 meses</td></tr>
       <tr><td>cliente_sesion</td><td>Manter a sua conta aberta se iniciar sessão (necessário)</td><td>Este site</td><td>60 dias</td></tr>
       <tr><td>idioma</td><td>Lembrar o idioma que escolhe com as bandeiras (necessário, só se mudar de idioma)</td><td>Este site</td><td>1 ano</td></tr>
+      <tr><td>salon_contacto</td><td>Lembrar neste dispositivo o seu nome e telefone para não ter de os escrever na próxima marcação (armazenamento local, só se deixar marcada a caixa «Lembrar os meus dados»; apaga-se com «Não sou eu» na janela de marcação)</td><td>Este site</td><td>Até o apagar</td></tr>
       <?php if ($s['ga_id'] !== '' || $s['gtm_id'] !== ''): ?>
       <tr><td>_ga, _ga_*</td><td>Estatísticas anónimas de visitas (análise, só se aceitar)</td><td>Google Analytics</td><td>2 anos</td></tr>
       <?php endif; ?>

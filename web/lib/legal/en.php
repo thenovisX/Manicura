@@ -49,6 +49,7 @@
       <tr><td>cookie_consent</td><td>Remember your cookie choice (necessary). After this period we will ask you again.</td><td>This website</td><td>13 months</td></tr>
       <tr><td>cliente_sesion</td><td>Keep you signed in to your account (necessary)</td><td>This website</td><td>60 days</td></tr>
       <tr><td>idioma</td><td>Remember the language you choose with the flags (necessary, only if you change language)</td><td>This website</td><td>1 year</td></tr>
+      <tr><td>salon_contacto</td><td>Remember your name and phone on this device so you do not have to type them next time (local storage, only if you leave «Remember my details» ticked; delete it with «Not me» in the booking window)</td><td>This website</td><td>Until you delete it</td></tr>
       <?php if ($s['ga_id'] !== '' || $s['gtm_id'] !== ''): ?>
       <tr><td>_ga, _ga_*</td><td>Anonymous visit statistics (analytics, only if you accept)</td><td>Google Analytics</td><td>2 years</td></tr>
       <?php endif; ?>
