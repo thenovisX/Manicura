@@ -13,6 +13,7 @@ Idioma: la web pública manda `?lang=es|en|pt|gl` (o la cookie `idioma`) y los m
 | `info` | GET | — | nombre, frase, contacto, horario, días cerrados, políticas |
 | `services` | GET | — | `categories` (secciones con sus `services`: `id`, `name`, `description`, `price`, `from` (precio «desde»), `duration` en minutos, `duration_text`, `photo_url`, `featured`), `servicios_on` y `packs` (packs activos traducidos) |
 | `slots&date=AAAA-MM-DD&service=ID` | GET | — | `open`, `reason`, `slots: [{time, left}]`. La duración sale del servicio (`service` 0 o sin él = la duración por defecto); solo se ofrecen horas en las que el servicio termina antes de que cierre el turno y en las que hay puestos libres durante toda la cita |
+| `days&from=AAAA-MM-DD&n=14&service=ID&people=1` | GET | — | lista `[{date, free, first}]` con cuántas horas libres quedan cada día (máx. 31 días) y la primera; `free` 0 = completo o cerrado. La usa la tira de días de la ventana de reserva |
 | `reserve` | POST | `date`, `time`, `people`, `service_id`? (0 = «Aún no lo sé»), `name`, `phone`, `email`?, `notes`?, `privacy: 1`, `website: ''` | `id`, `when`, `message`, `linked` (sale en una cuenta), `email` |
 | `erase_request` | POST JSON | `contact` (email o teléfono): pide borrar todos los datos; responde siempre lo mismo. Con email llega un enlace; con teléfono, la petición sale en la app |
 
