@@ -1,6 +1,6 @@
 <?php
 /*
- * Piezas comunes del tema Laca: abrir() pinta el <head>, el fondo de laca y la cabecera (con «Reservar» siempre a la vista); cerrar(), el pie.
+ * Piezas comunes del tema Laca: abrir() pinta el <head> y la cabecera (con «Reservar» siempre a la vista); cerrar(), el pie.
  * Lo único obligatorio en cualquier tema: llamar a head_tags() dentro de <head> y a body_end() antes de </body>,
  * y tener en el pie los enlaces legales y cookies_link().
  */
@@ -17,13 +17,12 @@ function abrir(string $titulo, string $clase = ''): void
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= h($titulo) ?></title>
 <?php head_tags(); ?>
-<link rel="preload" href="tema/assets/fonts/fraunces-latin-soft-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="tema/assets/fonts/fraunces-latin-soft-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="tema/assets/fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= asset('tema.css') ?>">
 <script src="<?= asset('tema.js') ?>" defer></script>
 </head>
 <body class="laca <?= h($clase) ?>">
-<div class="liquido" aria-hidden="true"></div>
 <a class="skip" href="#main"><?= t('Saltar al contenido') ?></a>
 <header class="cab">
   <a class="cab-marca" href="./"><?= h($s['name']) ?></a>

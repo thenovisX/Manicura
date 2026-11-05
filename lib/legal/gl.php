@@ -49,6 +49,7 @@
       <tr><td>cookie_consent</td><td>Lembrar a túa elección sobre as cookies (necesaria). Pasado ese prazo volvemos preguntarche.</td><td>Esta web</td><td>13 meses</td></tr>
       <tr><td>cliente_sesion</td><td>Manter aberta a túa conta se entras (necesaria)</td><td>Esta web</td><td>60 días</td></tr>
       <tr><td>idioma</td><td>Lembrar o idioma que escolles coas bandeiras (necesaria, só se cambias de idioma)</td><td>Esta web</td><td>1 ano</td></tr>
+      <tr><td>salon_contacto</td><td>Lembrar neste dispositivo o teu nome e teléfono para non escribilos na próxima reserva (almacenamento local, só se deixas marcada a caixa «Lembrar os meus datos»; bórrase con «Non son eu» na xanela de reserva)</td><td>Esta web</td><td>Ata que o borres</td></tr>
       <?php if ($s['ga_id'] !== '' || $s['gtm_id'] !== ''): ?>
       <tr><td>_ga, _ga_*</td><td>Estatísticas anónimas de visitas (análise, só se o aceptas)</td><td>Google Analytics</td><td>2 anos</td></tr>
       <?php endif; ?>
