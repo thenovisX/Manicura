@@ -85,6 +85,25 @@ function day_slots(string $date, bool $ignoreRules = false, int $excludeId = 0, 
     return $res;
 }
 
+/**
+ * Cuántas horas libres quedan cada día desde $from durante $n días (para la tira de días de la ventana de reserva).
+ * Devuelve [['date' => 'AAAA-MM-DD', 'free' => 5, 'first' => '10:30'], …]; free 0 = completo o cerrado.
+ */
+function days_free(string $from, int $n, int $minutes = 0, int $people = 1): array
+{
+    if (!is_date($from)) throw new ValidationError('Fecha no válida');
+    if ($from < today()) $from = today();
+    $n = min(31, max(1, $n));
+    $people = max(1, $people);
+    $out = [];
+    for ($i = 0; $i < $n; $i++) {
+        $day = date('Y-m-d', strtotime("$from +$i days"));
+        $sl = array_values(array_filter(day_slots($day, false, 0, $minutes)['slots'], fn($x) => $x['left'] >= $people));
+        $out[] = ['date' => $day, 'free' => count($sl), 'first' => $sl[0]['time'] ?? ''];
+    }
+    return $out;
+}
+
 function reservation_fields(array $in, bool $fromPanel): array
 {
     $d = [
@@ -166,9 +185,9 @@ function create_public_reservation(array $in): array
     if (!$cid && $d['email'] !== '') {
         $cid = (int)(q('SELECT id FROM customers WHERE email_idx = ? AND verified_at IS NOT NULL', [email_idx($d['email'])])->fetchColumn() ?: 0);
     }
-    q('INSERT INTO reservations (name, phone, email, email_idx, rdate, rtime, people, notes, service_id, service, duration, status, source, ip, created_at, updated_at, customer_id, verify_token, seq, lang)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
-        enc($d['name']), enc($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
+    q('INSERT INTO reservations (name, phone, phone_idx, email, email_idx, rdate, rtime, people, notes, service_id, service, duration, status, source, ip, created_at, updated_at, customer_id, verify_token, seq, lang)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
+        enc($d['name']), enc($d['phone']), phone_idx($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
         $d['service_id'], $d['service'], $d['duration'], $status, 'web', $ip, now(), now(), $cid, enc($token), next_seq(), lang(),
     ]);
     $id = (int)$pdo->lastInsertId();
@@ -275,6 +294,8 @@ function res_admin(array $row): array
         $r['wa_url'] = 'https://wa.me/' . wa_number($r['phone']) . '?text=' . rawurlencode(whatsapp_text($r, $url));
         $r['wa_auto'] = wa_api_ready();
     }
+    // Con las fichas activadas: visitas, faltas y si tiene notas (para verlo antes de aceptar)
+    if ($r['phone'] !== '' && ($brief = client_brief($row))) $r['client'] = $brief;
     return $r;
 }
 
@@ -337,6 +358,7 @@ function res_out(array $r): array
         'customer' => (int)($r['customer_id'] ?? 0) > 0,
         'cancel_by' => (string)($r['cancel_by'] ?? ''),   // cliente o salon
         'lang' => (string)($r['lang'] ?? 'es'),           // idioma en el que reservó
+        'noshow' => (bool)($r['noshow'] ?? false),        // el salón marcó que no vino
     ];
 }
 
@@ -437,15 +459,15 @@ function save_reservation(array $in): array
     day_slots($d['rdate'], true); // valida formato
     if ($id) {
         // Los recordatorios vuelven a empezar por si ha cambiado el día o la hora
-        q('UPDATE reservations SET name=?, phone=?, email=?, email_idx=?, rdate=?, rtime=?, people=?, notes=?, service_id=?, service=?, duration=?, updated_at=?, reminders=0 WHERE id=?', [
-            enc($d['name']), enc($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
+        q('UPDATE reservations SET name=?, phone=?, phone_idx=?, email=?, email_idx=?, rdate=?, rtime=?, people=?, notes=?, service_id=?, service=?, duration=?, updated_at=?, reminders=0 WHERE id=?', [
+            enc($d['name']), enc($d['phone']), phone_idx($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
             $d['service_id'], $d['service'], $d['duration'], now(), $id,
         ]);
         return get_reservation_admin($id);
     }
-    q('INSERT INTO reservations (name, phone, email, email_idx, rdate, rtime, people, notes, service_id, service, duration, status, source, ip, created_at, updated_at, seq)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
-        enc($d['name']), enc($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
+    q('INSERT INTO reservations (name, phone, phone_idx, email, email_idx, rdate, rtime, people, notes, service_id, service, duration, status, source, ip, created_at, updated_at, seq)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
+        enc($d['name']), enc($d['phone']), phone_idx($d['phone']), enc($d['email']), email_idx($d['email']), $d['rdate'], $d['rtime'], $d['people'], enc($d['notes']),
         $d['service_id'], $d['service'], $d['duration'], 'confirmada', 'panel', '', now(), now(), next_seq(),
     ]);
     return get_reservation_admin((int)db()->lastInsertId());

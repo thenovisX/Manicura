@@ -13,6 +13,7 @@ Idioma: la web pública manda `?lang=es|en|pt|gl` (o la cookie `idioma`) y los m
 | `info` | GET | — | nombre, frase, contacto, horario, días cerrados, políticas |
 | `services` | GET | — | `categories` (secciones con sus `services`: `id`, `name`, `description`, `price`, `from` (precio «desde»), `duration` en minutos, `duration_text`, `photo_url`, `featured`), `servicios_on` y `packs` (packs activos traducidos) |
 | `slots&date=AAAA-MM-DD&service=ID` | GET | — | `open`, `reason`, `slots: [{time, left}]`. La duración sale del servicio (`service` 0 o sin él = la duración por defecto); solo se ofrecen horas en las que el servicio termina antes de que cierre el turno y en las que hay puestos libres durante toda la cita |
+| `days&from=AAAA-MM-DD&n=14&service=ID&people=1` | GET | — | lista `[{date, free, first}]` con cuántas horas libres quedan cada día (máx. 31 días) y la primera; `free` 0 = completo o cerrado. La usa la tira de días de la ventana de reserva |
 | `reserve` | POST | `date`, `time`, `people`, `service_id`? (0 = «Aún no lo sé»), `name`, `phone`, `email`?, `notes`?, `privacy: 1`, `website: ''` | `id`, `when`, `message`, `linked` (sale en una cuenta), `email` |
 | `erase_request` | POST JSON | `contact` (email o teléfono): pide borrar todos los datos; responde siempre lo mismo. Con email llega un enlace; con teléfono, la petición sale en la app |
 
@@ -56,7 +57,14 @@ Todos los usuarios pueden leer reservas y servicios. Para cambiar hacen falta pe
 | `reject_info` | GET | `id` de una reserva: horas libres ese día cerca de la pedida (`slots`) y textos para rechazarla por WhatsApp (`text_slots` con `{horas}`, `text_none`, `wa_number`) |
 | `user_save` | POST | (administrador) `id`?, `username`, `name`, `email`?, `password`?, `role` (`admin` o `staff`), `perms` (`reservas`, `servicios`, `ajustes`), `active` |
 | `user_delete` | POST | (administrador) `id` |
-| `reservations&from=&to=` | GET | reservas entre dos fechas |
+| `reservations&from=&to=` | GET | reservas entre dos fechas. Con las fichas activadas, cada una lleva `client` (`visits`, `noshows`, `notes`) y siempre `noshow` |
+| `reservation_noshow` | POST | (`reservas`, fichas activadas) `id`, `on`: marca o quita «No vino» en una cita confirmada cuya hora ya ha pasado |
+| `client&res=ID` o `client&id=ID` | GET | (fichas activadas) ficha de la clienta: visitas, faltas, notas, `no_msgs`, `upcoming` e `history` |
+| `client_save` | POST | (`reservas`) `id` o `res_id`, `notes`, `no_msgs`: guarda la ficha (la crea desde la cita si no existía) |
+| `clients&q=` | GET | fichas, con buscador por nombre o teléfono |
+| `client_delete` | POST | (`reservas`) `id`: borra la ficha y su historial |
+| `followups` | GET | sin la API de Meta: reseñas (`reviews`) y avisos «te toca volver» (`rebook`) pendientes, con `wa_url` para mandarlos a mano. `auto: true` si salen solos |
+| `followup_done` | POST | (`reservas`) `kind` (`review` o `rebook`), `id`: ya mandado o «Ahora no» |
 | `requests` | GET | `nuevas` y `esperando` |
 | `month&month=AAAA-MM` | GET | resumen por día |
 | `changes&since=N` | GET | novedades desde el número N (avisos) |

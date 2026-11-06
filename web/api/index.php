@@ -39,6 +39,10 @@ try {
             // La duración sale del servicio elegido (nunca de lo que mande el navegador)
             $svc = bookable_service((int)($_GET['service'] ?? 0));
             out(day_slots((string)($_GET['date'] ?? ''), false, 0, $svc['duration'] ?? 0));
+        case 'days':
+            // Huecos libres de varios días seguidos, para pintar la tira de días (máximo 31 de una vez)
+            $svc = bookable_service((int)($_GET['service'] ?? 0));
+            out(days_free((string)($_GET['from'] ?? today()), (int)($_GET['n'] ?? 14), $svc['duration'] ?? 0, (int)($_GET['people'] ?? 1)));
         case 'reserve':
             only_post(); same_origin_only();
             out(create_public_reservation($in), 201);
@@ -193,6 +197,35 @@ try {
             only_post();
             require_perm($user, 'reservas');
             delete_reservation($id);
+            out(true);
+        case 'reservation_noshow':
+            only_post();
+            require_perm($user, 'reservas');
+            if (!settings()['fichas_on']) throw new ValidationError('Activa antes las fichas de clientas en Ajustes → Clientas');
+            out(reservation_noshow($id, filter_var($in['on'] ?? true, FILTER_VALIDATE_BOOLEAN)));
+
+        /* Funciones opcionales para que las clientas vuelvan (fichas.php) */
+        case 'client':
+            if (!settings()['fichas_on']) throw new ValidationError('Las fichas de clientas están apagadas (Ajustes → Clientas)');
+            out(client_card((int)($_GET['res'] ?? 0), (int)($_GET['id'] ?? 0)));
+        case 'client_save':
+            only_post();
+            require_perm($user, 'reservas');
+            if (!settings()['fichas_on']) throw new ValidationError('Las fichas de clientas están apagadas (Ajustes → Clientas)');
+            out(client_save($in));
+        case 'clients':
+            out(clients_list((string)($_GET['q'] ?? '')));
+        case 'client_delete':
+            only_post();
+            require_perm($user, 'reservas');
+            client_delete($id);
+            out(true);
+        case 'followups':
+            out(followups_pending());
+        case 'followup_done':
+            only_post();
+            require_perm($user, 'reservas');
+            followup_done((string)($in['kind'] ?? ''), $id);
             out(true);
 
         case 'admin_services':

@@ -28,6 +28,7 @@ function installed(): bool
     ensure_schema();
     purge_old_reservations();
     try { wa_reminders_run(); } catch (Throwable $e) { error_log('[salon] Recordatorios: ' . $e->getMessage()); }
+    try { followups_run(); } catch (Throwable $e) { error_log('[salon] Reseñas y avisos: ' . $e->getMessage()); }
     return $ok = true;
 }
 
@@ -55,14 +56,17 @@ function purge_old_reservations(bool $force = false): int
     q('DELETE FROM audit_log WHERE at < ?', [date('Y-m-d H:i:s', time() - 3 * 365 * 86400)]);
     // Reservas borradas desde el panel: se guardaban solo para que el enlace dijera «cancelada»; fuera al pasar
     q('DELETE FROM reservations WHERE deleted = 1 AND (rdate < ? OR (rdate = ? AND rtime <= ?))', [$d, $d, $t]);
-    return q("UPDATE reservations SET name = 'Reserva pasada', phone = '', email = '', email_idx = '', notes = '', ip = ''
+    // Fichas de clientas (si están activadas): la cita pasa a su historial antes de borrar sus datos
+    clients_record($d, $t);
+    clients_cleanup();
+    return q("UPDATE reservations SET name = 'Reserva pasada', phone = '', phone_idx = '', email = '', email_idx = '', notes = '', ip = ''
               WHERE (rdate < ? OR (rdate = ? AND rtime <= ?)) AND (phone <> '' OR email <> '' OR notes <> '')", [$d, $d, $t])->rowCount();
 }
 
 /** Actualiza la base de datos de instalaciones anteriores sin perder datos. */
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 /** Versión de las condiciones y la privacidad: se guarda con cada aceptación. Súbela si cambias los textos. */
-const LEGAL_VERSION = '2026-10-22';
+const LEGAL_VERSION = '2026-11-06';
 function ensure_schema(): void
 {
     $v = (int)(q("SELECT v FROM settings WHERE k = '_schema'")->fetchColumn() ?: 1);
@@ -155,6 +159,21 @@ function ensure_schema(): void
             "ALTER TABLE users ADD COLUMN email_idx VARCHAR(64) NOT NULL DEFAULT ''",
         ] as $sql) {
             try { db()->exec($sql); } catch (Throwable $e) { /* ya existe */ }
+        }
+    }
+    if ($v < 11) {
+        // v11: fichas de clientas, «no vino», huella del teléfono y días para volver de cada servicio (ver fichas.php)
+        foreach ([
+            "ALTER TABLE reservations ADD COLUMN phone_idx VARCHAR(64) NOT NULL DEFAULT ''",
+            'ALTER TABLE reservations ADD COLUMN noshow TINYINT NOT NULL DEFAULT 0',
+            'ALTER TABLE services ADD COLUMN return_days INT NOT NULL DEFAULT 0',
+            'CREATE INDEX idx_res_phone ON reservations (phone_idx)',
+        ] as $sql) {
+            try { db()->exec($sql); } catch (Throwable $e) { /* ya existe */ }
+        }
+        require_once __DIR__ . '/cifrado.php';
+        foreach (q("SELECT id, phone FROM reservations WHERE phone <> '' AND phone_idx = ''")->fetchAll() as $r) {
+            q('UPDATE reservations SET phone_idx = ? WHERE id = ?', [phone_idx(dec($r['phone'])), $r['id']]);
         }
     }
     q("DELETE FROM settings WHERE k = '_schema'");
@@ -267,6 +286,16 @@ const SETTINGS_DEFAULTS = [
     'wa_template_lang' => 'es', // idioma por defecto de la plantilla (es, es_ES, en_US…)
     'wa_remind_on'  => false,  // recordatorio 24 h y 12 h antes de cada cita confirmada
     'wa_remind_template' => '', // plantilla aprobada del recordatorio (vacío = texto libre)
+    // Funciones opcionales para que las clientas vuelvan (ver fichas.php). Todas empiezan apagadas.
+    'review_on'     => false,  // pedir una reseña unas horas después de la cita
+    'review_url'    => '',     // enlace para escribir la reseña en Google
+    'review_hours'  => 2,      // horas después de acabar la cita
+    'review_template' => '',   // plantilla aprobada de Meta con 3 variables: nombre, salón y enlace (vacío = texto libre)
+    'share_on'      => false,  // botón «Compartir enlace de reserva» en Inicio
+    'rebook_on'     => false,  // botón «Reservar lo mismo» en la cuenta de la web
+    'rebook_remind_on' => false, // aviso «te toca volver» a los días que diga cada servicio
+    'rebook_template' => '',   // plantilla aprobada con 3 variables: nombre, servicio y enlace (vacío = texto libre)
+    'fichas_on'     => false,  // fichas de clientas: historial, notas y «no vino»
     // Horario: día ISO (1 = lunes … 7 = domingo) => lista de franjas [inicio, fin]
     'hours'         => [
         '1' => [],
@@ -343,7 +372,17 @@ function settings_save(array $values): array
             $clean[$k] = substr(preg_replace('/\D/', '', (string)$v), 0, 30);
             continue;
         }
-        if ($k === 'wa_template' || $k === 'wa_remind_template') {
+        if ($k === 'review_url') {
+            $v = trim((string)$v);
+            if ($v !== '' && !preg_match('#^https://[^\s"<>]+$#i', $v)) throw new ValidationError('El enlace de las reseñas tiene que empezar por https://');
+            $clean[$k] = mb_substr($v, 0, 600);
+            continue;
+        }
+        if ($k === 'review_hours') {
+            $clean[$k] = min(20, max(1, (int)$v));
+            continue;
+        }
+        if (in_array($k, ['wa_template', 'wa_remind_template', 'review_template', 'rebook_template'], true)) {
             $v = mb_strtolower(trim((string)$v));
             if ($v !== '' && !preg_match('/^[a-z0-9_]{1,512}$/', $v)) throw new ValidationError('El nombre de la plantilla solo lleva minúsculas, números y guiones bajos, como en Meta');
             $clean[$k] = $v;
@@ -407,6 +446,9 @@ function settings_save(array $values): array
             throw new ValidationError('Para activar el WhatsApp automático pon el identificador del número y el token de Meta');
         }
         if (!function_exists('curl_init')) throw new ValidationError('El servidor no tiene cURL activado: pídelo en el hosting');
+    }
+    if (!empty($clean['review_on']) && ($clean['review_url'] ?? settings()['review_url']) === '') {
+        throw new ValidationError('Para pedir reseñas pega antes el enlace de tus reseñas de Google');
     }
     if (!empty($clean['wa_remind_on'])) {
         $cur = settings();

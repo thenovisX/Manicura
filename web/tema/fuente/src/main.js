@@ -1,14 +1,10 @@
 // JavaScript del tema Laca. Se compila a assets/tema.js con `npm run build` (ver LEEME.md).
-// La reserva, la cuenta y las cookies las hace el SDK (sdk/salon.js). Aquí solo va lo que acompaña sin distraer:
-// el fondo de laca (OGL, muy lento y oscuro), el menú del móvil, la cabecera con fondo al bajar y el botón flotante «Reservar cita».
-import { liquido } from './liquido.js';
+// La reserva, la cuenta y las cookies las hace el SDK (sdk/salon.js). Aquí solo va lo mínimo:
+// el menú del móvil, la cabecera con fondo al bajar y el botón flotante «Reservar cita».
 
 const html = document.documentElement;
 html.classList.replace('sin-js', 'js');
-const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
-if (quieto) html.classList.add('quieto');
-// Móviles modestos o con ahorro de datos: el fondo queda como una imagen fija
-const modesto = !!(navigator.connection?.saveData || (navigator.deviceMemory && navigator.deviceMemory <= 2));
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) html.classList.add('quieto');
 
 const $ = (s, c = document) => c.querySelector(s);
 
@@ -28,14 +24,15 @@ function menu() {
 
 // Cabecera con fondo en cuanto bajas, y botón flotante «Reservar cita» (móvil) cuando ya no se ve el de la portada
 function alBajar() {
-  const cab = $('.cab'), flota = $('.flota'), hero = $('.hero .pill-llena'), cierre = $('.cierre');
+  const cab = $('.cab'), flota = $('.flota'), hero = $('.hero .pill-llena'), cierre = $('.cierre-caja');
   let pendiente = false;
   const ver = () => {
     pendiente = false;
-    cab?.classList.toggle('cab-fondo', scrollY > 20);
+    cab?.classList.toggle('cab-fondo', scrollY > 10);
     if (flota && hero) {
       const pasado = hero.getBoundingClientRect().bottom < 0;
-      const alFinal = cierre && cierre.getBoundingClientRect().top < innerHeight * 0.7;
+      const r = cierre?.getBoundingClientRect();
+      const alFinal = r && r.top < innerHeight && r.bottom > 0;
       flota.classList.toggle('on', pasado && !alFinal);
     }
   };
@@ -46,7 +43,6 @@ function alBajar() {
 function iniciar() {
   menu();
   alBajar();
-  liquido($('.liquido'), { quieto: quieto || modesto, calma: true });
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

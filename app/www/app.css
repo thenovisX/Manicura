@@ -502,3 +502,31 @@ body[data-tab="ajustes"] .me-btn { box-shadow: 0 0 0 3px var(--fondo), 0 0 0 5px
 .how { margin: 0 0 8px; padding: 14px 16px 14px 36px; background: var(--papel); border-radius: var(--r); box-shadow: var(--sombra); display: grid; gap: 6px; color: var(--mar-2); }
 .how li::marker { color: var(--pimenton); font-weight: 800; }
 @media (min-width: 900px) { .cd { aspect-ratio: 1.7 / 1; } }
+
+/* Clientas: fichas, «no vino», mensajes de Inicio y enlaces para compartir */
+.chip-noshow { background: #FBE3E1; color: #A3281C; }
+.by-hand.tag-warn, .tag.tag-warn { border-color: #F0B8B2; background: #FBE3E1; color: #A3281C; }
+.ficha-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 14px; }
+.ficha-stats p { margin: 0; padding: 12px 8px; border-radius: 14px; background: var(--fondo); text-align: center; }
+.ficha-stats b { display: block; font-size: 1.3rem; color: var(--mar); }
+.ficha-stats span { font-size: .8rem; color: var(--granito); }
+.ficha-stats .warn { background: #FBE3E1; }
+.ficha-stats .warn b { color: #A3281C; }
+.ficha-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.ficha-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--linea); }
+.ficha-list li span { color: var(--granito); font-size: .9rem; min-width: 110px; }
+.ficha-list li b { flex: 1; font-weight: 600; }
+.follow h2 { display: flex; align-items: center; gap: 10px; }
+.follow h2 svg { width: 22px; height: 22px; color: var(--pimenton); }
+.follow h2 b { margin-left: auto; min-width: 26px; height: 26px; border-radius: 13px; display: grid; place-items: center; background: var(--rosa-bg); color: var(--pimenton); font-size: .9rem; }
+.follow-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.follow-row .avatar { width: 40px; height: 40px; font-size: .9rem; }
+.fr-main { flex: 1; min-width: 0; }
+.fr-main b { display: block; }
+.fr-main small { color: var(--granito); }
+.fr-btns { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+.fr-btns .link-btn { padding: 4px 2px; font-size: .85rem; }
+.share-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--linea); }
+.share-row div { flex: 1; min-width: 0; }
+.share-row b { display: block; }
+.share-row small { color: var(--granito); overflow-wrap: anywhere; }
