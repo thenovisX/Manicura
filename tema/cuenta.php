@@ -79,7 +79,8 @@ abrir(($cliente ? t('Mi cuenta') : t('Entrar')) . ' · ' . $s['name'], 'pagina')
       <h2><?= t('Historial') ?></h2>
       <ul class="lista-res lista-pasadas">
         <?php foreach (array_slice($reservas['past'], 0, 20) as $r): ?>
-          <li><div><p class="res-cuando"><?= h(ucfirst($r['when'])) ?></p><p class="nota"><?= h($r['what']) ?> · <?= [ 'rechazada' => t('No pudimos atenderla'), 'cancelada' => t('Cancelada')][$r['status']] ?? t('Pasada') ?></p></div></li>
+          <li><div><p class="res-cuando"><?= h(ucfirst($r['when'])) ?></p><p class="nota"><?= h($r['what']) ?> · <?= [ 'rechazada' => t('No pudimos atenderla'), 'cancelada' => t('Cancelada')][$r['status']] ?? t('Pasada') ?></p></div>
+            <?php if ($s['rebook_on'] && $r['service_id']): ?><button class="boton" type="button" data-book data-book-service="<?= (int)$r['service_id'] ?>"><?= t('Reservar lo mismo') ?></button><?php endif; ?></li>
         <?php endforeach; ?>
       </ul>
     </section>

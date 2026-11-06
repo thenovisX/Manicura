@@ -431,4 +431,9 @@ return [
     'Cita' => ['en' => 'Appointment', 'pt' => 'Marcação', 'gl' => 'Cita'],
     'Por la mañana' => ['en' => 'Morning', 'pt' => 'De manhã', 'gl' => 'Pola mañá'],
     'Por la tarde' => ['en' => 'Afternoon', 'pt' => 'À tarde', 'gl' => 'Pola tarde'],
+    // Funciones opcionales para que las clientas vuelvan (fichas.php)
+    'Reservar lo mismo' => ['en' => 'Book the same again', 'pt' => 'Marcar o mesmo', 'gl' => 'Reservar o mesmo'],
+    'Hola %s, gracias por venir a %s. Si te ha gustado, ¿nos dejas una reseña en Google? Nos ayuda muchísimo:' => ['en' => 'Hi %s, thank you for coming to %s. If you enjoyed it, would you leave us a Google review? It helps us a lot:', 'pt' => 'Olá, %s, obrigado por ter vindo a %s. Se gostou, pode deixar-nos uma avaliação no Google? Ajuda-nos muito:', 'gl' => 'Ola %s, grazas por vir a %s. Se che gustou, déixasnos unha opinión en Google? Axúdanos moitísimo:'],
+    'Hola %s, ya va siendo hora de tu %s en %s. Si quieres, reserva en un momento aquí:' => ['en' => 'Hi %s, it is nearly time for your %s at %s. If you like, book in a moment here:', 'pt' => 'Olá, %s, está quase na hora da sua %s em %s. Se quiser, marque num instante aqui:', 'gl' => 'Ola %s, xa vai sendo hora da túa %s en %s. Se queres, reserva nun momento aquí:'],
+    'Si no quieres recibir estos avisos, contéstanos «no».' => ['en' => 'If you would rather not get these reminders, just reply "no".', 'pt' => 'Se não quiser receber estes avisos, responda «não».', 'gl' => 'Se non queres recibir estes avisos, respóndenos «non».'],
 ];
