@@ -2,7 +2,8 @@
 /*
  * Ventana de reserva en una sola pantalla (la controla sdk/salon.js). Se abre con cualquier elemento que tenga data-book.
  * Pensada para reservar con tres toques: el servicio (o ya viene elegido con data-book-service), la hora y «Reservar».
- * Arriba va el servicio, debajo el día y la hora, y cuando eliges hora aparece «¿A nombre de quién?». Si el cliente ya
+ * Arriba va el servicio, debajo el día (tira de días con un punto en los que tienen hueco y el atajo «Lo antes
+ * posible») y las horas agrupadas en mañana y tarde (las ocupadas, apagadas), y cuando eliges hora aparece «¿A nombre de quién?». Si el cliente ya
  * reservó desde ese móvil (o tiene cuenta), sus datos salen puestos y no tiene que escribir nada.
  * Abajo, siempre a la vista, una barra con lo que se reserva y el botón «Reservar».
  * Sus colores y tipografías se cambian desde el tema con variables CSS (--r-bg, --r-text, --r-accent…; ver TEMA.md).
@@ -42,8 +43,16 @@ $maxP = (int)$s['max_people'];
       <?php endif; ?>
 
       <section class="bk-blk" id="bk-b-when" aria-labelledby="bk-when-t" <?= $servicios ? 'hidden' : '' ?>>
-        <h3 class="bk-blk-t" id="bk-when-t"><?= t('¿Cuándo te viene bien?') ?></h3>
-        <div class="bk-days" id="bk-days" role="radiogroup" aria-label="<?= t('Día') ?>"></div>
+        <div class="bk-when-h">
+          <h3 class="bk-blk-t" id="bk-when-t"><?= t('¿Cuándo te viene bien?') ?></h3>
+          <span class="bk-month" id="bk-month" aria-hidden="true"></span>
+        </div>
+        <button type="button" class="bk-asap" id="bk-asap" hidden><span class="bk-asap-i" aria-hidden="true">⚡</span><span><?= t('Lo antes posible') ?> <b id="bk-asap-w"></b></span></button>
+        <div class="bk-strip">
+          <button type="button" class="bk-arrow" id="bk-prev" aria-label="<?= t('Días anteriores') ?>">‹</button>
+          <div class="bk-days" id="bk-days" role="radiogroup" aria-label="<?= t('Día') ?>"></div>
+          <button type="button" class="bk-arrow" id="bk-next" aria-label="<?= t('Más días') ?>">›</button>
+        </div>
         <div id="bk-slots" class="bk-slots" aria-live="polite"></div>
         <?php if ($maxP > 1): ?>
         <details class="bk-mas" id="bk-people-d">
@@ -103,10 +112,16 @@ $maxP = (int)$s['max_people'];
     <section class="bk-done" id="bk-done" hidden>
       <p class="bk-done-mark" aria-hidden="true">✓</p>
       <h3 class="bk-h" id="bk-done-t"><?= t('¡Petición enviada!') ?></h3>
-      <p class="bk-done-cita" id="bk-done-cita"></p>
+      <div class="bk-tique">
+        <p class="bk-tique-f"><span id="bk-done-dia"></span><b id="bk-done-num"></b><span id="bk-done-mes"></span></p>
+        <p class="bk-done-cita" id="bk-done-cita"></p>
+      </div>
       <p id="bk-done-msg"></p>
       <p class="bk-done-more" id="bk-done-more"></p>
-      <button class="bk-btn bk-btn-main" type="button" data-close><?= t('Hecho') ?></button>
+      <div class="bk-done-btns">
+        <a class="bk-btn" id="bk-ics" href="#" download="cita.ics"><?= t('Añadir a mi calendario') ?></a>
+        <button class="bk-btn bk-btn-main" type="button" data-close><?= t('Hecho') ?></button>
+      </div>
     </section>
   </form>
 </dialog>
