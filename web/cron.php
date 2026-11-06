@@ -20,4 +20,5 @@ if (!installed()) {
 }
 $purged = purge_old_reservations(true);
 $sent = wa_reminders_run(true);
-echo json_encode(['ok' => true, 'reminders' => $sent, 'purged' => $purged]);
+$follow = followups_run(true);
+echo json_encode(['ok' => true, 'reminders' => $sent, 'followups' => $follow, 'purged' => $purged]);

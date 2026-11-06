@@ -567,6 +567,14 @@
     });
 
     if (location.hash === '#reservar' && /[?&]app=1/.test(location.search)) setTimeout(openBooking, 300);
+    // Enlace directo a la reserva (Google, Instagram, «te toca volver»): ?reservar abre la ventana y
+    // ?reservar=ID la abre con ese servicio ya elegido
+    var deep = location.search.match(/[?&]reservar(?:=(\d+))?(?:&|$)/);
+    if (deep) {
+      openBooking.service = +deep[1] || 0;
+      openBooking.notes = '';
+      setTimeout(openBooking, 300);
+    }
   }
 
   /* ---------- Ampliar fotos ---------- */

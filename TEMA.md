@@ -249,3 +249,8 @@ Si quieres hacer tu propia ventana de reserva, llama a `body_end(['reserva' => f
 ## Icono de la app
 
 Por defecto se genera con la inicial del salón y los colores de `TEMA_COLORES`. Para usar un logo, pon un PNG cuadrado (512×512 o más) en `tema/assets/icono.png`.
+
+## Enlace directo a la reserva y «Reservar lo mismo»
+
+- Cualquier página con la ventana de reserva la abre sola con `?reservar` en la dirección, o con un servicio ya elegido con `?reservar=ID`. Es el enlace que la app da para Instagram y Google y el del aviso «te toca volver».
+- En `cuenta.php`, si `$s['rebook_on']` está activado, cada reserva pasada con servicio lleva un botón `data-book data-book-service="<?= $r['service_id'] ?>"` («Reservar lo mismo»). Los temas nuevos pueden hacer lo mismo.

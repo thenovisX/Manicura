@@ -19,6 +19,7 @@ function service_out(array $d): array
         'duration' => (int)$d['duration'], 'duration_text' => minutes_text((int)$d['duration']),
         'photo' => $d['photo'] === '' ? '' : (preg_match('#^https?://#', $d['photo']) ? $d['photo'] : base_url() . '/' . $d['photo']),
         'available' => (bool)$d['available'], 'featured' => (bool)$d['featured'], 'position' => (int)$d['position'],
+        'return_days' => (int)($d['return_days'] ?? 0), // aviso «te toca volver» a los X días (0 = sin aviso)
     ];
 }
 
@@ -88,16 +89,19 @@ function save_service(array $in, ?array $file): array
     if ($dur < 5 || $dur > 600) throw new ValidationError('La duración tiene que estar entre 5 minutos y 10 horas');
     $available = filter_var($in['available'] ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
     $featured = filter_var($in['featured'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    $ret = isset($in['return_days']) ? min(365, max(0, (int)$in['return_days'])) : null; // sin el campo, se queda como estaba
 
     if ($id) {
         $old = get_service($id);
         q('UPDATE services SET category_id=?, name=?, description=?, price=?, price_from=?, duration=?, available=?, featured=? WHERE id=?',
             [$cat, $name, $desc, $price, $from, $dur, $available, $featured, $id]);
+        if ($ret !== null) q('UPDATE services SET return_days = ? WHERE id = ?', [$ret, $id]);
     } else {
         $pos = (int)q('SELECT COALESCE(MAX(position), 0) + 1 FROM services WHERE category_id = ?', [$cat])->fetchColumn();
         q('INSERT INTO services (category_id, name, description, price, price_from, duration, photo, available, featured, position) VALUES (?,?,?,?,?,?,?,?,?,?)',
             [$cat, $name, $desc, $price, $from, $dur, '', $available, $featured, $pos]);
         $id = (int)db()->lastInsertId();
+        if ($ret) q('UPDATE services SET return_days = ? WHERE id = ?', [$ret, $id]);
         $old = get_service($id);
     }
 
