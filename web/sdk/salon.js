@@ -74,7 +74,7 @@
 
   /* ---------- Reserva en una pantalla: servicio, hora y «Reservar» ---------- */
   var dlg = $('#bk');
-  var B = { people: 1, service: null, date: R.today, time: '', slots: [], minutes: 0, done: false, tries: 0 };
+  var B = { people: 1, service: null, date: R.today, time: '', slots: [], minutes: 0, done: false, tries: 0, days: null, want: '' };
   var KEY = 'salon_contacto';
 
   /* Datos de contacto recordados en este dispositivo (solo si el cliente deja marcada «Recordar mis datos») */
@@ -137,17 +137,34 @@
   }
   var hasSvcs = function () { return !!$('#bk-svcs', dlg); };
 
-  /** Barra de abajo: qué se reserva y cuándo, y el botón «Reservar» activo cuando ya hay hora. */
+  /** «10:30» + 45 → «11:15». */
+  function addMin(t, m) {
+    var x = +t.slice(0, 2) * 60 + +t.slice(3, 5) + (m || 0);
+    return pad(Math.floor(x / 60) % 24) + ':' + pad(x % 60);
+  }
+  function svcMinutes() {
+    var s = SVC[B.service];
+    return B.minutes || (s && s.duration) || 0;
+  }
+
+  /**
+   * Resumen fijo de abajo: arriba qué se reserva (servicio y precio) y debajo cuándo (día y de qué hora a qué hora).
+   * El botón «Reservar» solo se activa cuando ya hay hora.
+   */
   function bar() {
     var s = SVC[B.service];
-    var what = s ? s.name : B.service === 0 ? T('Aún no lo sé') : '';
-    var bits = [];
-    if (s && s.price) bits.push(s.price + (B.people > 1 ? ' ' + T('por persona') : ''));
-    if (B.people > 1) bits.push(B.people + ' ' + T('personas'));
-    var when = B.time ? shortDay(B.date) + ' · ' + B.time : '';
-    if (hasSvcs() && B.service === null) { $('#bk-sum1').textContent = T('Elige un servicio'); $('#bk-sum2').textContent = ''; }
-    else if (!B.time) { $('#bk-sum1').textContent = what || T('Elige día y hora'); $('#bk-sum2').textContent = what ? T('Ahora elige la hora') : ''; }
-    else { $('#bk-sum1').textContent = when; $('#bk-sum2').textContent = [what].concat(bits).filter(Boolean).join(' · '); }
+    var what = s ? s.name : B.service === 0 ? T('Aún no lo sé') : T('Tu cita');
+    var price = s && s.price ? s.price + (B.people > 1 ? ' ' + T('por persona') : '') : '';
+    var m = svcMinutes();
+    var line2 = [];
+    if (hasSvcs() && B.service === null) { what = T('Elige un servicio'); price = ''; }
+    else if (B.time) line2.push(shortDay(B.date) + ' · ' + B.time + (m ? '–' + addMin(B.time, m) : ''));
+    else line2.push(m ? minText(m) : '', T('Elige día y hora'));
+    if (B.people > 1) line2.push(B.people + ' ' + T('personas'));
+    // El precio va aparte para que nunca lo corte un nombre de servicio largo
+    $('#bk-sum1').innerHTML = '<span>' + esc(what) + '</span>' + (price ? '<span class="bk-sum-p">' + esc(price) + '</span>' : '');
+    $('#bk-sum2').textContent = line2.filter(Boolean).join(' · ');
+    $('#bk-sum2').classList.toggle('is-on', !!B.time);
     $('#bk-send').disabled = !B.time;
     $('#bk-send').textContent = T('Reservar');
   }
@@ -165,11 +182,13 @@
     $$('.bk-svc', dlg).forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.svc === B.service)); });
   }
 
+  function maxDays() { return Math.min(R.daysAhead || 30, 30); }
+
+  /** Tira de días: día de la semana, número y un punto si quedan horas libres (como en las apps de citas). */
   function renderDays() {
     var box = $('#bk-days');
     box.innerHTML = '';
-    var max = Math.min(R.daysAhead || 30, 30);
-    for (var i = 0; i < max; i++) {
+    for (var i = 0; i < maxDays(); i++) {
       var day = addDays(R.today, i);
       var d = parse(day);
       var b = document.createElement('button');
@@ -179,10 +198,68 @@
       b.dataset.day = day;
       b.disabled = isClosed(day);
       b.setAttribute('aria-checked', String(day === B.date));
-      b.setAttribute('aria-label', longDay(day) + (b.disabled ? ', ' + T('cerrado') : ''));
-      b.innerHTML = '<small>' + (i === 0 ? T('hoy') : i === 1 ? T('mañana') : DIAS[d.getDay()]) + '</small><b>' + d.getDate() + '</b><small>' + MESES[d.getMonth()].slice(0, 3) + '</small>';
+      b.innerHTML = '<small>' + (i === 0 ? T('hoy') : i === 1 ? T('mañana') : DIAS[d.getDay()]) + '</small><b>' + d.getDate() + '</b><i aria-hidden="true"></i>';
       box.appendChild(b);
     }
+    paintDays();
+    monthLabel();
+  }
+
+  /** Marca cada día según los huecos que le quedan: punto = hay hora; «completo» = no queda nada. */
+  function paintDays() {
+    var map = {};
+    (B.days || []).forEach(function (x) { map[x.date] = x; });
+    $$('.bk-day', dlg).forEach(function (b) {
+      var day = b.dataset.day, x = map[day], closed = isClosed(day);
+      var full = !closed && x && !x.free;
+      b.classList.toggle('is-full', !!full);
+      b.classList.toggle('is-free', !!(x && x.free));
+      $('i', b).textContent = closed ? T('cerrado') : full ? T('completo') : '';
+      b.setAttribute('aria-label', longDay(day) + (closed ? ', ' + T('cerrado') : full ? ', ' + T('completo') : x ? ', ' + T('%d horas libres', x.free) : ''));
+    });
+    asap();
+  }
+
+  /** «noviembre 2026» encima de la tira, según el primer día que se ve. */
+  function monthLabel() {
+    var box = $('#bk-days'), lbl = $('#bk-month');
+    if (!box || !lbl) return;
+    var first = $$('.bk-day', box).filter(function (b) { return b.offsetLeft + b.offsetWidth / 2 >= box.scrollLeft + box.offsetLeft; })[0];
+    var d = parse(first ? first.dataset.day : B.date), m = MESES[d.getMonth()];
+    lbl.textContent = m.charAt(0).toUpperCase() + m.slice(1) + ' ' + d.getFullYear();
+    var prev = $('#bk-prev'), next = $('#bk-next');
+    if (prev) prev.disabled = box.scrollLeft < 4;
+    if (next) next.disabled = box.scrollLeft + box.clientWidth >= box.scrollWidth - 4;
+  }
+
+  /** Primer día con hueco (desde «desde», sin contarlo) según la tira, o null. */
+  function nextFree(desde) {
+    var list = (B.days || []).filter(function (x) { return x.free && x.date > desde; });
+    return list[0] || null;
+  }
+
+  /** Atajo «Lo antes posible»: el primer hueco libre de todos, a un toque. */
+  function asap() {
+    var a = $('#bk-asap');
+    if (!a) return;
+    var x = (B.days || []).filter(function (y) { return y.free; })[0];
+    a.hidden = !x || (B.date === x.date && B.time === x.first);
+    if (!x) return;
+    a.dataset.day = x.date;
+    a.dataset.time = x.first;
+    $('#bk-asap-w').textContent = shortDay(x.date) + ' · ' + x.first;
+  }
+
+  /** Pide a la API cuántas horas libres quedan cada día (para el servicio y las personas elegidas). */
+  function loadDays() {
+    var key = B.service + '|' + B.people;
+    B.daysKey = key;
+    return api('days&from=' + R.today + '&n=' + maxDays() + (B.service ? '&service=' + B.service : '') + '&people=' + B.people).then(function (d) {
+      if (B.daysKey !== key) return null;
+      B.days = d;
+      paintDays();
+      return d;
+    }, function () { B.days = null; return null; });
   }
 
   function pickDate(day) {
@@ -191,42 +268,80 @@
     $$('.bk-day', dlg).forEach(function (b) {
       var on = b.dataset.day === day;
       b.setAttribute('aria-checked', String(on));
-      if (on && b.scrollIntoView) { var box = b.parentNode; box.scrollLeft = Math.max(0, b.offsetLeft - box.offsetLeft - 8); }
+      if (on) { var box = b.parentNode; box.scrollLeft = Math.max(0, b.offsetLeft - box.offsetLeft - 74); } // deja ver el día de antes
     });
+    monthLabel();
+    asap();
     bar();
   }
 
+  function slotBtn(s) {
+    var ok = s.left >= B.people;
+    return ok
+      ? '<button type="button" class="bk-slot" data-time="' + s.time + '" aria-pressed="' + (s.time === B.time) + '">' + s.time + '</button>'
+      : '<button type="button" class="bk-slot bk-slot-busy" disabled aria-label="' + s.time + ', ' + T('ocupado') + '">' + s.time + '</button>';
+  }
+
+  /** Horas del día en dos grupos, mañana y tarde. Las ocupadas se ven apagadas para que se entienda qué queda. */
   function renderSlots() {
     var box = $('#bk-slots');
     var free = B.slots.filter(function (s) { return s.left >= B.people; });
     if (!free.length) {
-      box.innerHTML = '<p class="bk-msg">' + esc(B.reason || (B.people > 1 ? T('No queda hueco para %d personas ese día.', B.people) : T('No queda ningún hueco libre ese día.'))) + ' ' + T('Prueba otro día.') + '</p>';
-    } else {
-      // Solo las horas libres: menos que leer y nada que tachar
-      box.innerHTML = '<div class="bk-slot-grid">' + free.map(function (s) {
-        return '<button type="button" class="bk-slot" data-time="' + s.time + '" aria-pressed="' + (s.time === B.time) + '">' + s.time + '</button>';
-      }).join('') + '</div>';
+      var nx = nextFree(B.date);
+      box.innerHTML = '<div class="bk-none"><p class="bk-msg">' + esc(B.reason || (B.people > 1 ? T('No queda hueco para %d personas ese día.', B.people) : T('No queda ningún hueco libre ese día.'))) + '</p>' +
+        (nx ? '<button type="button" class="bk-btn bk-go" data-go="' + nx.date + '">' + esc(T('Ver el %s', shortDay(nx.date).toLowerCase())) + ' <span aria-hidden="true">→</span></button>' : '<p class="bk-msg">' + T('Prueba otro día.') + '</p>') + '</div>';
+      return;
     }
+    var groups = [
+      [T('Por la mañana'), B.slots.filter(function (s) { return s.time < '14:00'; })],
+      [T('Por la tarde'), B.slots.filter(function (s) { return s.time >= '14:00'; })]
+    ];
+    box.innerHTML = groups.filter(function (g) { return g[1].length; }).map(function (g) {
+      var n = g[1].filter(function (s) { return s.left >= B.people; }).length;
+      return '<div class="bk-tg"><p class="bk-tg-t"><span>' + g[0] + '</span><small>' + (n ? (n === 1 ? T('1 hora libre') : T('%d horas libres', n)) : T('completo')) + '</small></p>' +
+        '<div class="bk-slot-grid">' + g[1].map(slotBtn).join('') + '</div></div>';
+    }).join('');
   }
 
-  /** Carga las horas libres. Con auto = true, si ese día no queda nada pasa solo al siguiente día abierto (hasta 10). */
+  /** Marca una hora como elegida y enseña «¿A nombre de quién?». */
+  function pickTime(t) {
+    B.time = t;
+    $$('.bk-slot', dlg).forEach(function (s) { s.setAttribute('aria-pressed', String(s.dataset.time === t)); });
+    $('#bk-err').textContent = '';
+    asap();
+    bar();
+    showWho();
+  }
+
+  /** Carga las horas del día elegido. Con auto = true, si ese día no queda nada pasa solo al siguiente con hueco. */
   function loadSlots(auto) {
     var box = $('#bk-slots'), day = B.date;
-    box.innerHTML = '<p class="bk-msg">' + T('Buscando horas libres…') + '</p>';
+    box.innerHTML = '<div class="bk-load" aria-label="' + T('Buscando horas libres…') + '">' + new Array(9).join('<span></span>') + '</div>';
     api('slots&date=' + encodeURIComponent(day) + (B.service ? '&service=' + B.service : '')).then(function (d) {
       if (day !== B.date) return; // ya han elegido otro día
       B.slots = d.slots;
       B.minutes = d.minutes;
       B.reason = d.open ? '' : d.reason + '.';
       if (auto && B.tries < 10 && !B.slots.some(function (s) { return s.left >= B.people; })) {
-        for (var i = 1; i <= 30; i++) {
-          var nx = addDays(day, i);
-          if (nx > addDays(R.today, Math.min(R.daysAhead || 30, 30) - 1)) break;
-          if (!isClosed(nx)) { B.tries++; pickDate(nx); loadSlots(true); return; }
+        var nx = nextFree(day);
+        if (nx) { B.tries++; pickDate(nx.date); loadSlots(true); return; }
+        if (!B.days) {
+          for (var i = 1; i <= 30; i++) {
+            var d2 = addDays(day, i);
+            if (d2 > addDays(R.today, maxDays() - 1)) break;
+            if (!isClosed(d2)) { B.tries++; pickDate(d2); loadSlots(true); return; }
+          }
         }
       }
       if (B.time && !B.slots.some(function (s) { return s.time === B.time && s.left >= B.people; })) B.time = '';
       renderSlots();
+      if (B.want) {
+        var w = B.want;
+        B.want = '';
+        // Si mientras tanto esa hora se ha ocupado (o ya no da tiempo), la siguiente libre de ese día
+        var ok = B.slots.filter(function (s) { return s.time >= w && s.left >= B.people; })[0];
+        if (ok) { pickTime(ok.time); return; }
+      }
       bar();
     }).catch(function (e) {
       box.innerHTML = '<p class="bk-msg">' + esc(e.message) + '</p>';
@@ -258,7 +373,14 @@
     var w = $('#bk-b-when');
     w.hidden = false;
     B.tries = 0;
-    loadSlots(true);
+    B.days = null;
+    paintDays();
+    // Primero qué días tienen hueco (para saltar directamente al primero) y luego las horas de ese día
+    loadDays().then(function (d) {
+      var x = d && d.filter(function (y) { return y.date === B.date; })[0];
+      if (d && x && !x.free) { var nx = nextFree(B.date); if (nx) pickDate(nx.date); }
+      loadSlots(true);
+    });
   }
 
   function resetDone() {
@@ -308,6 +430,17 @@
     if (was) setTimeout(function () { w.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }, 30);
   }
 
+  /** Enlace «Añadir a mi calendario»: un .ics con la cita (hora local del salón). */
+  function icsHref(what, day, time, mins) {
+    var d = day.replace(/-/g, ''), a = time.replace(':', '') + '00', b = addMin(time, mins).replace(':', '') + '00';
+    var place = (R.name || '').replace(/[,;\\]/g, ' ');
+    var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//salon//reserva//ES', 'BEGIN:VEVENT',
+      'UID:' + d + a + '-' + Math.random().toString(36).slice(2) + '@salon', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+      'DTSTART:' + d + 'T' + a, 'DTEND:' + d + 'T' + b,
+      'SUMMARY:' + (what + (place ? ' · ' + place : '')).replace(/[,;\\]/g, ' '), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+  }
+
   function send() {
     var f = $('#bk-form'), err = $('#bk-err');
     err.textContent = '';
@@ -337,7 +470,12 @@
       $('#bk-body').hidden = true;
       $('#bk-foot').hidden = true;
       $('#bk-done').hidden = false;
-      $('#bk-done-cita').textContent = longDay(B.date).charAt(0).toUpperCase() + longDay(B.date).slice(1) + ' · ' + B.time + (SVC[B.service] ? ' · ' + SVC[B.service].name : '');
+      var m = svcMinutes(), dd = parse(B.date), sv = SVC[B.service];
+      $('#bk-done-dia').textContent = DIAS_L[dd.getDay()];
+      $('#bk-done-num').textContent = dd.getDate();
+      $('#bk-done-mes').textContent = MESES[dd.getMonth()];
+      $('#bk-done-cita').textContent = B.time + (m ? '–' + addMin(B.time, m) : '') + (sv ? ' · ' + sv.name : '');
+      $('#bk-ics').href = icsHref(sv ? sv.name : T('Cita'), B.date, B.time, m || 60);
       $('#bk-done-msg').textContent = T('Te escribimos por WhatsApp al %s para confirmarla.', phone);
       var more = $('#bk-done-more');
       if (r.linked) more.innerHTML = T('La verás en <a href="cuenta.php">tu cuenta</a>, donde también podrás cancelarla.');
@@ -381,15 +519,24 @@
       }
       var day = e.target.closest('.bk-day');
       if (day && !day.disabled) { pickDate(day.dataset.day); loadSlots(false); return; }
-      var slot = e.target.closest('.bk-slot');
-      if (slot && !slot.disabled) {
-        B.time = slot.dataset.time;
-        $$('.bk-slot', dlg).forEach(function (s) { s.setAttribute('aria-pressed', String(s === slot)); });
-        $('#bk-err').textContent = '';
-        bar();
-        showWho();
+      var go = e.target.closest('[data-go]');
+      if (go) { pickDate(go.dataset.go); loadSlots(false); return; }
+      var fast = e.target.closest('#bk-asap');
+      if (fast) {
+        if (fast.dataset.day === B.date && B.slots.length) { pickTime(fast.dataset.time); return; }
+        B.want = fast.dataset.time;
+        pickDate(fast.dataset.day);
+        loadSlots(false);
         return;
       }
+      var arrow = e.target.closest('#bk-prev, #bk-next');
+      if (arrow) {
+        var strip = $('#bk-days');
+        strip.scrollBy({ left: (arrow.id === 'bk-next' ? 1 : -1) * (strip.clientWidth - 70), behavior: 'smooth' });
+        return;
+      }
+      var slot = e.target.closest('.bk-slot');
+      if (slot && !slot.disabled) { pickTime(slot.dataset.time); return; }
       if (e.target.closest('#bk-not-me')) {
         WHO = null;
         setSaved(null);
@@ -407,8 +554,11 @@
         B.time = '';
         renderSlots();
         bar();
+        loadDays();
       }
     });
+    var strip = $('#bk-days');
+    if (strip) strip.addEventListener('scroll', function () { if (!B.raf) B.raf = requestAnimationFrame(function () { B.raf = 0; monthLabel(); }); }, { passive: true });
     // Intro en el móvil: del nombre al teléfono, y del teléfono a reservar
     dlg.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter' || !e.target.name) return;

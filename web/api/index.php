@@ -39,6 +39,10 @@ try {
             // La duración sale del servicio elegido (nunca de lo que mande el navegador)
             $svc = bookable_service((int)($_GET['service'] ?? 0));
             out(day_slots((string)($_GET['date'] ?? ''), false, 0, $svc['duration'] ?? 0));
+        case 'days':
+            // Huecos libres de varios días seguidos, para pintar la tira de días (máximo 31 de una vez)
+            $svc = bookable_service((int)($_GET['service'] ?? 0));
+            out(days_free((string)($_GET['from'] ?? today()), (int)($_GET['n'] ?? 14), $svc['duration'] ?? 0, (int)($_GET['people'] ?? 1)));
         case 'reserve':
             only_post(); same_origin_only();
             out(create_public_reservation($in), 201);

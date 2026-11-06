@@ -85,6 +85,25 @@ function day_slots(string $date, bool $ignoreRules = false, int $excludeId = 0, 
     return $res;
 }
 
+/**
+ * Cuántas horas libres quedan cada día desde $from durante $n días (para la tira de días de la ventana de reserva).
+ * Devuelve [['date' => 'AAAA-MM-DD', 'free' => 5, 'first' => '10:30'], …]; free 0 = completo o cerrado.
+ */
+function days_free(string $from, int $n, int $minutes = 0, int $people = 1): array
+{
+    if (!is_date($from)) throw new ValidationError('Fecha no válida');
+    if ($from < today()) $from = today();
+    $n = min(31, max(1, $n));
+    $people = max(1, $people);
+    $out = [];
+    for ($i = 0; $i < $n; $i++) {
+        $day = date('Y-m-d', strtotime("$from +$i days"));
+        $sl = array_values(array_filter(day_slots($day, false, 0, $minutes)['slots'], fn($x) => $x['left'] >= $people));
+        $out[] = ['date' => $day, 'free' => count($sl), 'first' => $sl[0]['time'] ?? ''];
+    }
+    return $out;
+}
+
 function reservation_fields(array $in, bool $fromPanel): array
 {
     $d = [

@@ -93,4 +93,13 @@ return [
     'Te escribimos por WhatsApp al %s para confirmarla.',
     'La verás en <a href="cuenta.php">tu cuenta</a>, donde también podrás cancelarla.',
     'Hasta que la confirmes en ese WhatsApp, la cita queda pendiente.',
+    'Lo antes posible',
+    'ocupado',
+    '%d horas libres',
+    '1 hora libre',
+    'Ver el %s',
+    'Tu cita',
+    'Cita',
+    'Por la mañana',
+    'Por la tarde',
 ];
