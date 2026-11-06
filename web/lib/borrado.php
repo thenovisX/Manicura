@@ -124,9 +124,12 @@ function erase_confirm(string $token): ?array
     if (!$req) return null;
     [$cus, $res] = erase_find($req['kind'], $req['contact']);
     $cancelled = 0;
+    // Fichas de clientas con ese teléfono o email (y con el teléfono de cualquiera de sus reservas)
+    $idxs = $req['kind'] === 'phone' ? [phone_idx($req['contact'])] : [];
     foreach ($res as $id) {
         $r = q('SELECT * FROM reservations WHERE id = ?', [$id])->fetch();
         if (!$r) continue;
+        if ($r['phone_idx'] !== '') $idxs[] = $r['phone_idx'];
         $active = in_array($r['status'], RES_ACTIVE, true) && strtotime($r['rdate'] . ' ' . $r['rtime']) > time();
         if ($active) {
             $cancelled++;
@@ -134,9 +137,13 @@ function erase_confirm(string $token): ?array
             salon_mail("Reserva cancelada: el cliente ha borrado sus datos, " . fmt_date_es($info['date']) . " {$info['time']}",
                 "{$info['name']} ha borrado sus datos desde la web y su reserva se ha cancelado.\n\nDía: " . fmt_date_es($info['date']) . " a las {$info['time']}\nPersonas: {$info['people']}");
         }
-        q("UPDATE reservations SET name = ?, phone = '', email = '', email_idx = '', notes = '', verify_token = '', ip = '', customer_id = 0, updated_at = ?"
+        q("UPDATE reservations SET name = ?, phone = '', phone_idx = '', email = '', email_idx = '', notes = '', verify_token = '', ip = '', customer_id = 0, updated_at = ?"
             . ($active ? ", status = 'cancelada', cancel_by = 'cliente', seq = " . next_seq() : '') . ' WHERE id = ?',
             [enc('Datos borrados'), now(), $id]);
+    }
+    foreach (q('SELECT id, phone_idx, email FROM clients')->fetchAll() as $c) {
+        $byMail = $req['kind'] === 'email' && $c['email'] !== '' && mb_strtolower(dec($c['email'])) === mb_strtolower($req['contact']);
+        if ($byMail || in_array($c['phone_idx'], $idxs, true)) client_delete((int)$c['id']);
     }
     if ($cus) {
         $ph = implode(',', array_fill(0, count($cus), '?'));

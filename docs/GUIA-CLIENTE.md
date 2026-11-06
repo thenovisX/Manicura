@@ -158,6 +158,17 @@ En **Inicio** ves de un vistazo cuántas citas te quedan hoy, cuál es la siguie
 4. **Inicio y Agenda:** ves las citas del día y de cualquier fecha. Las que te pidan por teléfono o en el salón las apuntas con el botón **+ Nueva cita**: escribes el nombre y el teléfono, eliges el servicio y tocas una de las horas libres. En la Agenda también cierras días sueltos (festivos o vacaciones).
 5. **Si el cliente cancela**, desde su enlace o desde su cuenta, la app te avisa.
 
+### Para que tus clientas vuelvan (opcional)
+
+En **Ajustes → Clientas** hay cuatro funciones. Todas empiezan apagadas: activa solo las que quieras.
+
+- **Pedir reseña en Google:** pega el enlace de tus reseñas (en tu Perfil de Empresa de Google, «Pedir reseñas») y unas horas después de cada cita la clienta recibe un WhatsApp para dejarte una opinión.
+- **Enlace para Google e Instagram:** copia el enlace que abre tu web con la reserva ya abierta y ponlo en tu perfil de Instagram y en Google. Con el botón «Compartir enlace de reserva» de Inicio también puedes compartir el de un servicio concreto.
+- **Volver a reservar:** botón «Reservar lo mismo» en la cuenta de la web y, si quieres, un aviso cuando le toca volver. Los días se ponen en cada servicio (por ejemplo, relleno de gel a los 21).
+- **Fichas de clientas:** al abrir una cita pulsa «Ficha de…» para ver cuántas veces ha venido, apuntar notas (forma, colores…) y, si no se presentó, marcar «No vino». No apuntes datos de salud.
+
+Si no tienes el WhatsApp automático, los mensajes que tocan salen en **Inicio → Mensajes para mandar**: tocas «Enviar», se abre WhatsApp con el texto escrito y le das a enviar.
+
 ---
 
 ## 7. Preguntas frecuentes

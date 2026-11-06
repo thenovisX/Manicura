@@ -64,6 +64,8 @@
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
     web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
     plate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M10 3h4v4h-4zM8.5 7h7l.8 3.5V20a1 1 0 0 1-1 1H8.7a1 1 0 0 1-1-1v-9.5z"/></svg>',
   };
@@ -95,6 +97,7 @@
   // Sin datos (servidor antiguo) se comporta como administrador
   const isAdmin = () => !S.me || S.me.role === 'admin';
   const can = (perm) => isAdmin() || (S.me.perms || []).includes(perm);
+  const fichasOn = () => !!(S.settings && S.settings.fichas_on);
   const norm = (t) => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   /* ---------- API ---------- */
@@ -544,10 +547,20 @@
         </div>
         <div class="res-time">${showDate ? `<small>${esc(fmtShort(r.date))}</small>` : ''}<b>${when}</b></div>
       </div>
-      <p class="res-meta"><span class="chip chip-${r.status}">${STATUS[r.status]}</span>${r.customer ? '<span class="by-hand">con cuenta</span>' : ''}</p>
+      <p class="res-meta"><span class="chip chip-${r.status}">${STATUS[r.status]}</span>${r.noshow ? '<span class="chip chip-noshow">No vino</span>' : ''}${r.customer ? '<span class="by-hand">con cuenta</span>' : ''}${clientTag(r)}</p>
       ${r.notes ? `<p class="res-notes">${esc(r.notes)}</p>` : ''}
       ${actions.length ? `<div class="res-actions">${actions.join('')}</div>` : ''}
     </article>`;
+  }
+
+  /** Con las fichas activadas: «3 visitas · 1 vez no vino · con notas» junto a la cita. */
+  function clientTag(r) {
+    const c = r.client;
+    if (!c) return '';
+    const bits = [c.visits ? `${c.visits} ${c.visits === 1 ? 'visita' : 'visitas'}` : 'Primera visita'];
+    if (c.noshows) bits.push(`${c.noshows} ${c.noshows === 1 ? 'vez' : 'veces'} no vino`);
+    if (c.notes) bits.push('con notas');
+    return `<span class="by-hand${c.noshows ? ' tag-warn' : ''}">${bits.join(' · ')}</span>`;
   }
 
   /** «María Pérez» → «MP», para el círculo de la tarjeta. */
@@ -609,18 +622,20 @@
         <span class="pet-txt"><b>${newReq === 1 ? 'Una clienta quiere cita' : `${newReq} clientas quieren cita`}</b><small>Toca para aceptar o rechazar</small></span>
         <span class="pet-go" aria-hidden="true">›</span></button>`;
     }
+    html += '<div id="follow-box"></div>';
     const quick = [
       can('reservas') && `<button type="button" class="qa qa-main" data-new-cita>${ICON.plus}<span>Nueva cita</span></button>`,
       `<button type="button" class="qa" data-goto-tab="cal">${ICON.cal}<span>Ver agenda</span></button>`,
       can('servicios') && `<button type="button" class="qa" data-new-service>${ICON.servicios}<span>Añadir servicio</span></button>`,
       S.base && `<a class="qa" href="${esc(S.base)}/" target="_blank" rel="noopener">${ICON.web}<span>Ver mi web</span></a>`,
+      S.settings.share_on && `<button type="button" class="qa" data-share>${ICON.share}<span>Compartir enlace de reserva</span></button>`,
     ].filter(Boolean);
     html += `<nav class="quick" aria-label="Accesos rápidos">${quick.join('')}</nav>`;
     html += `<label class="search">${ICON.search}<input type="search" id="hoy-q" placeholder="Buscar una cita por nombre o teléfono" value="${esc(S.query)}" autocomplete="off" enterkeyhint="search"></label>`;
     html += '<div id="hoy-body"></div>';
     return html;
   }
-  afterRender.hoy = (view) => renderHoyBody(view);
+  afterRender.hoy = (view) => { renderHoyBody(view); loadFollowups(view); };
 
   function dayStrip() {
     const t = todayISO();
@@ -758,6 +773,9 @@
       if (r.wa_auto) btns.push(`<a class="btn btn-quiet" href="${esc(r.wa_url)}" target="_blank" rel="noopener" data-wa-send="${r.id}">Enviar a mano</a>`);
     } else if (r.status === 'confirmada') {
       btns.push(`<button class="btn btn-quiet" data-s="cancelada">Cancelar reserva</button>`);
+      // Con las fichas: marcar que no vino (solo cuando ya ha pasado su hora y aún quedan sus datos)
+      const started = new Date(`${r.date}T${r.time}`) <= new Date();
+      if (fichasOn() && started && r.phone) btns.push(`<button class="btn btn-quiet" data-noshow="${r.noshow ? 0 : 1}">${r.noshow ? 'Sí vino (quitar «No vino»)' : 'No vino'}</button>`);
     } else {
       btns.push(`<button class="btn btn-quiet" data-s="confirmada">Volver a confirmar</button>`);
     }
@@ -780,11 +798,24 @@
           <a class="btn btn-line" href="${esc(telHref(r.phone))}">Llamar</a>
           <a class="btn btn-line" href="${esc(waHref(r.phone))}" target="_blank" rel="noopener">WhatsApp</a>
         </div>` : ''}
+        ${r.phone && fichasOn() ? `<button class="btn btn-line" data-ficha>Ficha de ${esc(r.name.split(' ')[0])}${r.client && r.client.notes ? ' · tiene notas' : ''}</button>` : ''}
         ${r.status === 'confirmada' && r.email === '' && r.source === 'web' ? '<p class="help">Este cliente no dejó email: avísale por teléfono o WhatsApp.</p>' : ''}
         ${edit ? '<button class="btn btn-quiet" data-edit>Editar datos</button><button class="btn btn-danger" data-del>Borrar reserva</button>' : '<p class="help">Tu usuario puede ver las reservas, pero no cambiarlas.</p>'}
       </div>`, (body) => {
       $$('[data-wa-send]', body).forEach((a) => a.addEventListener('click', () => { markSent(r.id); closeSheet(); }));
       $$('[data-wa-auto]', body).forEach((b) => b.addEventListener('click', () => autoSend(r.id, b)));
+      const fi = $('[data-ficha]', body);
+      if (fi) fi.addEventListener('click', () => showClient({ res: r.id }));
+      const ns = $('[data-noshow]', body);
+      if (ns) ns.addEventListener('click', async () => {
+        busy(ns, true, '…');
+        try {
+          S.res[r.id] = await api('reservation_noshow', { body: { id: r.id, on: ns.dataset.noshow === '1' } });
+          toast(ns.dataset.noshow === '1' ? 'Apuntado: no vino. Queda en su ficha.' : 'Quitado «No vino»');
+          closeSheet();
+          render();
+        } catch (err) { toast(err.message, 'err'); busy(ns, false); }
+      });
       $$('[data-s]', body).forEach((b) => b.addEventListener('click', async () => {
         if (b.dataset.s === 'rechazada') { rejectFlow(r); return; }
         const q2 = { cancelada: `¿Cancelar la reserva de ${r.name}?` }[b.dataset.s];
@@ -961,7 +992,7 @@
 
   /* ---------- SERVICIOS ---------- */
   async function viewServicios() {
-    S.svc = await api('admin_services');
+    [S.svc] = await Promise.all([api('admin_services'), loadSettings()]);
     const canEdit = can('servicios');
     if (canEdit) setFab('Nuevo servicio', () => editService(null));
     const cats = S.svc.categories;
@@ -1243,6 +1274,7 @@
         <label class="switch-row">Precio «desde» (varía según el diseño) <span class="sw"><input type="checkbox" name="from" ${d.from ? 'checked' : ''}><span></span></span></label>
         <label class="switch-row">Se puede reservar (sale en la web) <span class="sw"><input type="checkbox" name="available" ${d.available ? 'checked' : ''}><span></span></span></label>
         <label class="switch-row">Destacado («Lo más pedido») <span class="sw"><input type="checkbox" name="featured" ${d.featured ? 'checked' : ''}><span></span></span></label>
+        ${S.settings && S.settings.rebook_remind_on ? `<label>Avisar para volver a los<span class="unit"><input name="return_days" type="number" min="0" max="365" inputmode="numeric" value="${Number(d.return_days) || 0}"><i>días</i></span><span class="help">Ese día le llega a la clienta un WhatsApp para reservar lo mismo. Por ejemplo, relleno de gel: 21. Con 0 no se avisa.</span></label>` : ''}
         <div class="actions">
           <button class="btn btn-main" type="submit">${isNew ? 'Añadir servicio' : 'Guardar cambios'}</button>
           ${isNew ? '' : `<div class="actions-row"><button type="button" class="btn btn-quiet btn-sm" data-move="-1">Subir</button><button type="button" class="btn btn-quiet btn-sm" data-move="1">Bajar</button></div>
@@ -1281,6 +1313,7 @@
         fd.append('from', f.from.checked ? '1' : '0');
         fd.append('available', f.available.checked ? '1' : '0');
         fd.append('featured', f.featured.checked ? '1' : '0');
+        if (f.return_days) fd.append('return_days', f.return_days.value || '0');
         if (removePhoto) fd.append('remove_photo', '1');
         if (newPhoto) fd.append('photo', newPhoto, 'foto.jpg');
         busy(btn, true, newPhoto ? 'Subiendo foto…' : 'Guardando…');
@@ -1459,6 +1492,67 @@
           <button class="btn btn-main" type="submit">Guardar</button>
         </form>`)}`;
 
+    // Funciones opcionales para que las clientas vuelvan. Todas empiezan apagadas.
+    const sw = (k, label) => `<label class="switch-row">${label} <span class="sw"><input type="checkbox" name="${k}" ${s[k] ? 'checked' : ''}><span></span></span></label>`;
+    const waAuto = !!(s.wa_phone_id && s.wa_token_set);
+    const autoNote = waAuto
+      ? '<p class="help">Tienes el WhatsApp automático: el mensaje sale solo.</p>'
+      : '<p class="help">Sin el WhatsApp automático (Técnico → Avanzado), en Inicio te sale la lista de mensajes para mandar: tocas «Enviar», se abre WhatsApp con el texto escrito y le das a enviar.</p>';
+    const tpl = (k, ph, vars) => `<details class="adv"><summary>Plantilla de Meta (solo con el WhatsApp automático)</summary>
+        ${field(k, 'Nombre de la plantilla', 'text', `placeholder="${ph}" autocapitalize="off" autocomplete="off"`)}
+        <p class="help">Plantilla con 3 variables: ${vars}. Sin plantilla, Meta solo entrega el mensaje si la clienta te ha escrito en las últimas 24 horas.</p></details>`;
+    const bookUrl = `${S.base}/?reservar`;
+    const clientas = !admin ? '' : `
+      ${sec('resenas', 'Pedir reseña en Google', s.review_on ? `Activado · ${Number(s.review_hours) || 2} h después de la cita` : 'Un WhatsApp después de la cita con el enlace para opinar', `
+        <form class="form" data-form="resenas" novalidate>
+          <p class="help">Unas horas después de cada cita, la clienta recibe un WhatsApp dándole las gracias con el enlace para dejarte una reseña en Google. No sale a quien marcaste «No vino», y si tiene ficha se le pide como mucho una vez cada 6 meses.</p>
+          <ol class="steps">
+            <li>Abre tu <a href="https://business.google.com" target="_blank" rel="noopener">Perfil de Empresa de Google</a> (o busca tu salón en Google con tu cuenta).</li>
+            <li>Pulsa <b>Pedir reseñas</b> y copia el enlace.</li>
+            <li>Pégalo aquí abajo.</li>
+          </ol>
+          ${field('review_url', 'Enlace de tus reseñas de Google', 'url', 'placeholder="https://g.page/r/…/review" autocapitalize="off"')}
+          ${num('review_hours', 'Cuándo se envía', 'Horas después de que acabe la cita (de 1 a 20).', 1, 'horas')}
+          ${sw('review_on', 'Pedir reseña después de cada cita')}
+          ${autoNote}
+          ${tpl('review_template', 'pedir_resena', '{{1}} nombre, {{2}} nombre del salón y {{3}} enlace')}
+          <button class="btn btn-main" type="submit">Guardar</button>
+        </form>`)}
+      ${sec('compartir', 'Enlace para Google e Instagram', s.share_on ? 'Botón en Inicio activado' : 'El enlace que abre la reserva directamente', `
+        <form class="form" data-form="compartir" novalidate>
+          <p class="help">Este enlace abre tu web con la reserva ya abierta. Ponlo en:</p>
+          <ul class="steps">
+            <li><b>Instagram</b>: Editar perfil → Enlaces → Añadir enlace.</li>
+            <li><b>Google</b>: en tu Perfil de Empresa → Editar perfil → Enlaces de reserva.</li>
+            <li>Tu perfil de WhatsApp Business, Facebook o TikTok.</li>
+          </ul>
+          <label>Enlace de reserva <input type="text" readonly value="${esc(bookUrl)}"></label>
+          <button type="button" class="btn btn-line btn-sm" data-copy="${esc(bookUrl)}">Copiar enlace</button>
+          ${sw('share_on', 'Botón «Compartir enlace de reserva» en Inicio')}
+          <p class="help">Desde ese botón también puedes compartir el enlace de un servicio concreto (por ejemplo, para una historia de Instagram de uñas de gel).</p>
+          <button class="btn btn-main" type="submit">Guardar</button>
+        </form>`)}
+      ${sec('volver', 'Volver a reservar', [s.rebook_on && 'botón en la web', s.rebook_remind_on && 'aviso para volver'].filter(Boolean).join(' · ').replace(/^./, (c) => c.toUpperCase()) || '«Reservar lo mismo» y aviso cuando toca volver', `
+        <form class="form" data-form="volver" novalidate>
+          ${sw('rebook_on', 'Botón «Reservar lo mismo» en la web')}
+          <p class="help">En el historial de las clientas con cuenta sale un botón que abre la reserva con el mismo servicio.</p>
+          ${sw('rebook_remind_on', 'Avisar cuando toca volver')}
+          <p class="help">En cada servicio pones a los cuántos días se repite (Servicios → el servicio → «Avisar para volver a los … días»; por ejemplo, relleno de gel a los 21). Ese día le llega un WhatsApp con el enlace para reservar lo mismo. No sale si ya tiene otra cita, si marcaste «No vino» o si pidió no recibir avisos. Para poder avisarla se guardan su nombre y su teléfono hasta 2 años (ya sale en tu política de privacidad).</p>
+          ${autoNote}
+          ${tpl('rebook_template', 'volver_a_reservar', '{{1}} nombre, {{2}} servicio y {{3}} enlace. Meta la clasifica como «Marketing»')}
+          <button class="btn btn-main" type="submit">Guardar</button>
+        </form>`)}
+      ${sec('fichas', 'Fichas de clientas', s.fichas_on ? 'Activadas' : 'Historial, notas y las veces que no vino', `
+        <form class="form" data-form="fichas" novalidate>
+          <p class="help">Cada clienta tiene su ficha, unida por su teléfono: cuántas veces ha venido, qué se hizo, tus notas (forma, largo, colores que le gustan…) y las veces que no vino sin avisar. La ves al abrir cualquier cita, y en las peticiones nuevas sale si alguna vez no vino.</p>
+          <p class="help">No apuntes datos de salud (alergias, enfermedades): para eso la ley pide su permiso por escrito. Si tiene una alergia, que lo ponga ella en las notas de su reserva.</p>
+          ${sw('fichas_on', 'Usar fichas de clientas')}
+          <p class="help">Las fichas se borran solas a los 2 años de la última visita, y también si la clienta pide borrar sus datos.</p>
+          <button class="btn btn-main" type="submit">Guardar</button>
+        </form>
+        ${s.fichas_on ? `<label class="search">${ICON.search}<input type="search" id="cli-q" placeholder="Buscar clienta por nombre o teléfono" autocomplete="off" enterkeyhint="search"></label>
+        <div id="cli-box"><p class="help">Cargando…</p></div>` : ''}`)}`;
+
     // Secciones de «Avanzado». Para añadir un ajuste técnico nuevo, añade aquí otra sec(…).
     const avanzado = !admin ? '' : [
       sec('correo', 'Envío de emails (SMTP)', s.smtp_on ? `Activado con ${esc(s.smtp_user)}` : 'Enviar los emails desde tu Gmail', `
@@ -1584,6 +1678,7 @@
       ['local', 'Salón', 'Información del salón', 'Lo que ven tus clientes en la web: nombre, contacto, fotos y datos legales.', local],
       ['horarios', 'Horario', 'Horario', 'Qué días y a qué horas abres.', horarios],
       ['reservas', 'Reservas', 'Reglas de reservas', 'Cómo y cuándo pueden reservar tus clientes por internet.', reservas],
+      ['clientas', 'Clientas', 'Clientas que vuelven', 'Funciones para que tus clientas repitan. Todas empiezan apagadas: activa solo las que quieras.', clientas],
       ['tecnica', 'Técnico', 'Configuración técnica', 'Idiomas de la web y, en «Avanzado», el correo, el WhatsApp automático, el traductor y Google.', tecnica],
       ['cuenta', 'Cuenta', 'Tu cuenta y tu equipo', 'Usuarios, avisos en el móvil, contraseña y sesión.', cuenta],
     ].filter((p) => p[4].trim());
@@ -1650,6 +1745,13 @@
     $$('form[data-form]', view).forEach((f) => f.addEventListener('submit', (e) => saveSettingsForm(e, f)));
     if ($('#users-box', view)) loadUsers();
     if ($('#cus-box', view)) loadCustomers();
+    if ($('#cli-box', view)) {
+      loadClients();
+      const cq = $('#cli-q', view);
+      let tm = 0;
+      cq.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => loadClients(cq.value.trim()), 250); });
+    }
+    $$('[data-copy]', view).forEach((b) => b.addEventListener('click', () => copyText(b.dataset.copy)));
     if ($('#tr-status', view)) loadTrStatus();
     const trRun = $('[data-tr-run]', view);
     if (trRun) trRun.addEventListener('click', async () => {
@@ -1933,8 +2035,143 @@
       // Las claves y contraseñas no vuelven del servidor: se vacía la casilla y se avisa de que ya hay una guardada
       $$('input[type=password][name]', f).forEach((pw) => { if (pw.value) { pw.value = ''; pw.placeholder = pw.dataset.saved || SAVED_SECRET; } });
       if (kind === 'idiomas' || kind === 'traductor') loadTrStatus();
+      if (['resenas', 'compartir', 'volver', 'fichas'].includes(kind)) render();
     } catch (err) { toast(err.message, 'err'); }
     busy(btn, false);
+  }
+
+  /* ---------- Clientas: fichas, mensajes de Inicio y enlace para compartir ---------- */
+  const fichaItem = (x) => `<li><span>${esc(fmtShort(x.date))} · ${esc(x.time)}</span><b>${esc(x.service || 'Sin servicio')}</b>${x.noshow ? '<i class="chip chip-noshow">No vino</i>' : ''}</li>`;
+
+  async function showClient(ref) {
+    let c;
+    try { c = await api(ref.res ? `client&res=${ref.res}` : `client&id=${ref.id}`); } catch (err) { toast(err.message, 'err'); return; }
+    const edit = can('reservas');
+    openSheet(c.name, `
+      <div class="ficha-stats">
+        <p><b>${c.visits}</b><span>${c.visits === 1 ? 'visita' : 'visitas'}</span></p>
+        <p class="${c.noshows ? 'warn' : ''}"><b>${c.noshows}</b><span>${c.noshows === 1 ? 'vez no vino' : 'veces no vino'}</span></p>
+        <p><b>${c.last_visit ? esc(fmtShort(c.last_visit)) : '—'}</b><span>última visita</span></p>
+      </div>
+      <dl class="detail">
+        ${c.phone ? `<dt>Teléfono</dt><dd>${esc(c.phone)}</dd>` : ''}
+        ${c.email ? `<dt>Email</dt><dd>${esc(c.email)}</dd>` : ''}
+        ${c.rebook_at ? `<dt>Aviso para volver</dt><dd>${esc(fmtShort(c.rebook_at))} · ${esc(c.rebook_service)}</dd>` : ''}
+      </dl>
+      <form class="form" id="cli-f" novalidate>
+        <label>Notas del salón <textarea name="notes" rows="3" maxlength="1000" placeholder="Forma y largo, colores que le gustan, con quién prefiere hacérselas…" ${edit ? '' : 'readonly'}>${esc(c.notes)}</textarea><span class="help">Solo las veis tú y tu equipo. No apuntes datos de salud.</span></label>
+        <label class="switch-row">No quiere recibir avisos (reseñas ni «te toca volver») <span class="sw"><input type="checkbox" name="no_msgs" ${c.no_msgs ? 'checked' : ''} ${edit ? '' : 'disabled'}><span></span></span></label>
+        ${edit ? '<button class="btn btn-main" type="submit">Guardar ficha</button>' : ''}
+      </form>
+      ${c.upcoming.length ? `<h3 class="sec">Próximas citas</h3><ul class="ficha-list">${c.upcoming.map(fichaItem).join('')}</ul>` : ''}
+      <h3 class="sec">Historial</h3>
+      ${c.history.length ? `<ul class="ficha-list">${c.history.slice(0, 40).map(fichaItem).join('')}</ul>` : '<p class="help">Aún no tiene visitas.</p>'}
+      <div class="actions">
+        ${c.phone ? `<div class="actions-row"><a class="btn btn-line" href="${esc(telHref(c.phone))}">Llamar</a><a class="btn btn-line" href="${esc(waHref(c.phone))}" target="_blank" rel="noopener">WhatsApp</a></div>` : ''}
+        ${c.id && edit ? '<button class="btn btn-danger" type="button" data-cli-del>Borrar ficha</button>' : ''}
+      </div>`, (body) => {
+      const f = $('#cli-f', body);
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = $('button[type=submit]', f);
+        busy(btn, true);
+        try {
+          await api('client_save', { body: { id: c.id, res_id: ref.res || 0, notes: f.notes.value, no_msgs: f.no_msgs.checked } });
+          closeSheet();
+          toast('Ficha guardada');
+          render();
+        } catch (err) { toast(err.message, 'err'); busy(btn, false); }
+      });
+      const del = $('[data-cli-del]', body);
+      if (del) del.addEventListener('click', async () => {
+        if (!confirm(`¿Borrar la ficha de ${c.name}? Se borran sus notas y su historial. Sus citas siguen en la agenda.`)) return;
+        try { await api('client_delete', { body: { id: c.id } }); closeSheet(); toast('Ficha borrada'); render(); }
+        catch (err) { toast(err.message, 'err'); }
+      });
+    });
+  }
+
+  async function loadClients(q = '') {
+    const box = $('#cli-box');
+    if (!box) return;
+    try {
+      const d = await api('clients&q=' + encodeURIComponent(q));
+      box.innerHTML = d.clients.length ? d.clients.map((c) => `<button type="button" class="user-row" data-cli="${c.id}">
+          <span class="user-main"><b>${esc(c.name)}</b><small>${esc(c.phone)}${c.last_visit ? ` · última visita ${esc(fmtShort(c.last_visit))}` : ''}</small></span>
+          <span class="user-tags"><i class="tag">${c.visits} ${c.visits === 1 ? 'visita' : 'visitas'}</i>${c.noshows ? `<i class="tag tag-warn">${c.noshows} no vino</i>` : ''}${c.notes ? '<i class="tag">notas</i>' : ''}</span>
+        </button>`).join('')
+        : `<p class="help">${q ? 'Ninguna ficha con ese nombre o teléfono.' : 'Aún no hay fichas. Se crean solas el día después de cada cita, o al guardar notas desde una cita.'}</p>`;
+      $$('[data-cli]', box).forEach((b) => b.addEventListener('click', () => showClient({ id: Number(b.dataset.cli) })));
+    } catch (err) { box.innerHTML = `<p class="err-box">${esc(err.message)}</p>`; }
+  }
+
+  /** Inicio: reseñas y avisos «te toca volver» para mandar a mano (sin el WhatsApp automático). */
+  async function loadFollowups(view) {
+    const sh = $('[data-share]', view);
+    if (sh) sh.addEventListener('click', shareSheet);
+    const box = $('#follow-box', view);
+    const st = S.settings || {};
+    if (!box || !(st.review_on || st.rebook_remind_on) || !can('reservas')) return;
+    let d;
+    try { d = await api('followups'); } catch (e) { return; }
+    if (d.auto) return;
+    const t = todayISO();
+    const rows = [
+      ...d.reviews.map((x) => ({ kind: 'review', id: x.id, name: x.name, what: `Pedir reseña · ${x.service || 'su cita'} de ${x.date === t ? 'hoy' : 'ayer'}`, url: x.wa_url })),
+      ...d.rebook.map((x) => ({ kind: 'rebook', id: x.id, name: x.name, what: `Le toca volver · ${x.service}`, url: x.wa_url })),
+    ];
+    if (!rows.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `<section class="card follow">
+      <h2>${ICON.star}<span>Mensajes para mandar</span><b>${rows.length}</b></h2>
+      <p class="help">Toca «Enviar»: se abre WhatsApp con el mensaje escrito y le das a enviar. Si no quieres mandarlo, pulsa «Ahora no».</p>
+      ${rows.map((r) => `<div class="follow-row" data-fk="${r.kind}" data-fid="${r.id}">
+        <span class="avatar" style="--h:${hue(r.name)}" aria-hidden="true">${esc(initials(r.name))}</span>
+        <div class="fr-main"><b>${esc(r.name)}</b><small>${esc(r.what)}</small></div>
+        <div class="fr-btns"><a class="btn btn-sm b-wa" href="${esc(r.url)}" target="_blank" rel="noopener" data-f-send>${ICON.wa}<span>Enviar</span></a>
+        <button class="link-btn" type="button" data-f-skip>Ahora no</button></div>
+      </div>`).join('')}
+    </section>`;
+    $$('.follow-row', box).forEach((row) => {
+      const done = async () => {
+        try {
+          await api('followup_done', { body: { kind: row.dataset.fk, id: Number(row.dataset.fid) } });
+          row.remove();
+          const left = $$('.follow-row', box).length;
+          if (!left) box.innerHTML = ''; else $('.follow h2 b', box).textContent = left;
+        } catch (err) { toast(err.message, 'err'); }
+      };
+      $('[data-f-send]', row).addEventListener('click', () => setTimeout(done, 300));
+      $('[data-f-skip]', row).addEventListener('click', done);
+    });
+  }
+
+  /** Enlaces de reserva para Instagram, Google o WhatsApp: el general y uno por servicio. */
+  async function shareSheet() {
+    if (!S.svc) { try { S.svc = await api('admin_services'); } catch (e) { S.svc = { categories: [] }; } }
+    const link = (id) => `${S.base}/?reservar${id ? '=' + id : ''}`;
+    const svcs = S.svc.categories.flatMap((c) => c.services.filter((d) => d.available));
+    openSheet('Compartir enlace de reserva', `
+      <p class="help" style="margin-top:0">Ponlo en tu perfil de Instagram, en Google (Perfil de Empresa → Enlaces de reserva) o mándalo por WhatsApp. Abre tu web con la reserva ya abierta.</p>
+      <div class="share-row"><div><b>Reservar cita</b><small>${esc(link(0).replace(/^https?:\/\//, ''))}</small></div><button type="button" class="btn btn-sm btn-main" data-sh="0">Compartir</button></div>
+      ${svcs.length ? '<h3 class="sec">Un servicio concreto</h3>' : ''}
+      ${svcs.map((d) => `<div class="share-row"><div><b>${esc(d.name)}</b><small>${minText(d.duration)} · ${d.from ? 'desde ' : ''}${euro(d.price)}</small></div><button type="button" class="btn btn-sm btn-line" data-sh="${d.id}">Compartir</button></div>`).join('')}`, (body) => {
+      $$('[data-sh]', body).forEach((b) => b.addEventListener('click', () => shareLink(link(Number(b.dataset.sh)))));
+    });
+  }
+  async function shareLink(url) {
+    if (navigator.share) {
+      try { await navigator.share({ title: S.salon || 'Reservar cita', url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    copyText(url);
+  }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); toast('Enlace copiado'); return; } catch (e) { /* sin permiso: a la antigua */ }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('Enlace copiado'); } catch (e) { toast(text); }
+    ta.remove();
   }
 
   /* ---------- Clics generales ---------- */

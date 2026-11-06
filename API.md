@@ -57,7 +57,14 @@ Todos los usuarios pueden leer reservas y servicios. Para cambiar hacen falta pe
 | `reject_info` | GET | `id` de una reserva: horas libres ese día cerca de la pedida (`slots`) y textos para rechazarla por WhatsApp (`text_slots` con `{horas}`, `text_none`, `wa_number`) |
 | `user_save` | POST | (administrador) `id`?, `username`, `name`, `email`?, `password`?, `role` (`admin` o `staff`), `perms` (`reservas`, `servicios`, `ajustes`), `active` |
 | `user_delete` | POST | (administrador) `id` |
-| `reservations&from=&to=` | GET | reservas entre dos fechas |
+| `reservations&from=&to=` | GET | reservas entre dos fechas. Con las fichas activadas, cada una lleva `client` (`visits`, `noshows`, `notes`) y siempre `noshow` |
+| `reservation_noshow` | POST | (`reservas`, fichas activadas) `id`, `on`: marca o quita «No vino» en una cita confirmada cuya hora ya ha pasado |
+| `client&res=ID` o `client&id=ID` | GET | (fichas activadas) ficha de la clienta: visitas, faltas, notas, `no_msgs`, `upcoming` e `history` |
+| `client_save` | POST | (`reservas`) `id` o `res_id`, `notes`, `no_msgs`: guarda la ficha (la crea desde la cita si no existía) |
+| `clients&q=` | GET | fichas, con buscador por nombre o teléfono |
+| `client_delete` | POST | (`reservas`) `id`: borra la ficha y su historial |
+| `followups` | GET | sin la API de Meta: reseñas (`reviews`) y avisos «te toca volver» (`rebook`) pendientes, con `wa_url` para mandarlos a mano. `auto: true` si salen solos |
+| `followup_done` | POST | (`reservas`) `kind` (`review` o `rebook`), `id`: ya mandado o «Ahora no» |
 | `requests` | GET | `nuevas` y `esperando` |
 | `month&month=AAAA-MM` | GET | resumen por día |
 | `changes&since=N` | GET | novedades desde el número N (avisos) |
